@@ -1,0 +1,1 @@
+export const middleOfBucharest = [26.1025, 44.4268];
