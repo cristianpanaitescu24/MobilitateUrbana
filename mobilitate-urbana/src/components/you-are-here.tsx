@@ -11,8 +11,14 @@ export default function YouAreHere() {
     if (!map) return;
     (async () => {
       const location = await getLocation();
-      if (location !== middleOfBucharest) {
-        setPopupLocation(location);
+      if (
+        Array.isArray(location) &&
+        location.length === 2 &&
+        typeof location[0] === "number" &&
+        typeof location[1] === "number" &&
+        (location[0] !== middleOfBucharest[0] || location[1] !== middleOfBucharest[1])
+      ) {
+        setPopupLocation(location as [number, number]);
         map.flyTo({ center: location, zoom: 8 });
       }
     })();

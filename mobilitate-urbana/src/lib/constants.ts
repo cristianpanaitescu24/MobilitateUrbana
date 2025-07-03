@@ -1,1 +1,1 @@
-export const middleOfBucharest = [26.1025, 44.4268];
+export const middleOfBucharest: [number, number] = [26.1025, 44.4268];
