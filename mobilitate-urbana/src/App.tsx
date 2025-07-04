@@ -1,7 +1,7 @@
 import React from 'react';
 import { AuthProvider } from './auth/AuthProvider';
 import { MapProvider } from './map/MapProvider';
-import MapView from './components/MapView';
+import MapView from './map/MapView';
 
 function App() {
   return (
