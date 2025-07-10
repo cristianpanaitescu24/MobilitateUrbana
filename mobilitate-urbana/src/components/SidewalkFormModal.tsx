@@ -8,11 +8,40 @@ interface SidewalkFormModalProps {
 }
 
 const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose }) => {
-  const [rating, setRating] = useState<number | null>(null);
-  const [obstacle, setObstacle] = useState(false);
-  const [size, setSize] = useState<number>(2);
   const [submitting, setSubmitting] = useState(false);
   const [streetName, setStreetName] = useState('Loading...');
+
+  const [notes, setNotes] = useState('');
+
+  const [issues, setIssues] = useState({
+    cars: false,
+    signs: false,
+    pavement: false,
+    stairs: false,
+    nature: false,
+  });
+
+  const [issueLabeles, setIssueLabeles] = useState({
+    cars: "Masini parcate pe trotuar",
+    signs: "Semne de circulatie deteriorate",
+    pavement: "Gropi sau trotuar denivelat",
+    stairs: "Necesita urcarea scarilor",
+    nature: "Natura neingrijita",
+  });
+
+  const toggleIssue = (key: keyof typeof issues) => {
+    setIssues((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const formatLabel = (key: string) =>
+  key.charAt(0).toUpperCase() + key.slice(1) + ' Issue';
+
+  const criteria = ["Satisfactie generala", "Siguranta", "Latime", "Utilizabilitate", "Accesibilitate", "Nivel modernizare"];
+  const [ratings, setRatings] = useState<{ [key: string]: number }>({});
+  const firstRated = ratings[criteria[0]] != null;
 
   useEffect(() => {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`)
@@ -22,14 +51,14 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
   }, [location]);
 
   const handleSubmit = () => {
-    if (rating == null) return;
+    if (!firstRated) return;
     setSubmitting(true);
 
     const payload = {
       location,
-      rating,
-      obstacle,
-      size,
+      ratings,
+      issues,
+      notes,
       timestamp: new Date().toISOString(),
     };
 
@@ -41,65 +70,71 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
     }, 1000);
   };
 
+  
   return (
     <div className="sidewalk-panel">
-      <h2>Rate This Sidewalk</h2>
+      <h2>Acorda o nota acestui trotuar:</h2>
       <p><strong>Street:</strong> {streetName}</p>
 
-      <div className="star-rating">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            onClick={() => setRating(star)}
-            className={rating === star ? 'selected' : ''}
-          >
-            {star}★
-          </button>
+      <div className="ratings-container">
+        {criteria.map((criterion) => (
+          <div key={criterion} className="star-rating-line">
+            <label>{criterion}</label>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() =>
+                  setRatings((prev) => ({
+                    ...prev,
+                    [criterion]: star,
+                  }))
+                }
+                className={ratings[criterion] === star ? "selected" : ""}
+              >
+                {star}★
+              </button>
+            ))}
+          </div>
         ))}
       </div>
 
-      <div className="tabs">
-        <button className="active">Rating</button>
-        <button>Advanced</button>
-      </div>
 
-      <label>Sidewalk width</label>
-      <input
-        type="range"
-        min={0}
-        max={5}
-        step={1}
-        value={size}
-        onChange={(e) => setSize(Number(e.target.value))}
-      />
-
-      <fieldset>
-        <legend>Obstructions</legend>
-        <label>
-          <input
-            type="checkbox"
-            checked={obstacle}
-            onChange={() => setObstacle(!obstacle)}
-          />{' '}
-          Obstructions
-        </label>
-        {/* Add other checkboxes like Vehicles, Trash, etc */}
-      </fieldset>
-
-      {/* Optional star ratings */}
-      <div className="category-stars">
-        <label>Safety</label>
-        <div className="star-row">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <span key={s}>★</span>
-          ))}
+      <legend>Probleme observate:</legend>
+      {Object.keys(issues).map((key) => (
+        <div key={key}>
+          <label>
+            <input
+              type="checkbox"
+              checked={issues[key as keyof typeof issues]}
+              onChange={() => toggleIssue(key as keyof typeof issues)}
+            />
+            {issueLabeles[key as keyof typeof issueLabeles]}
+          </label>
         </div>
+      ))}
+
+      <div style={{ marginTop: '1rem' }}>
+        <label htmlFor="notes">Observatii generale:</label>
+        <br />
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={5}
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            borderRadius: '5px',
+            border: '1px solid #ccc',
+            fontSize: '1rem',
+            resize: 'vertical',
+          }}
+          placeholder="Scrieți aici observațiile generale..."
+        />
       </div>
 
-      <textarea placeholder="General observations..." />
-
-      <button disabled={rating == null || submitting} onClick={handleSubmit}>
-        {submitting ? 'Submitting...' : 'Submit'}
+      <button disabled={!firstRated || submitting} onClick={handleSubmit}>
+        {submitting ? 'Trimitere...' : 'Trimite'}
       </button>
       <button onClick={onClose}>Cancel</button>
     </div>
