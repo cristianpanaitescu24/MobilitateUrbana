@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SidewalkFormModal.css';
 
 interface SidewalkFormModalProps {
@@ -9,10 +8,9 @@ interface SidewalkFormModalProps {
 
 const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
-  const [streetName, setStreetName] = useState('Loading...');
-
+  const [streetName, setStreetName] = useState('Se încarcă...');
   const [notes, setNotes] = useState('');
-
+  const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [issues, setIssues] = useState({
     cars: false,
     signs: false,
@@ -21,13 +19,30 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
     nature: false,
   });
 
-  const [issueLabeles, setIssueLabeles] = useState({
-    cars: "Masini parcate pe trotuar",
-    signs: "Semne de circulatie deteriorate",
-    pavement: "Gropi sau trotuar denivelat",
-    stairs: "Necesita urcarea scarilor",
-    nature: "Natura neingrijita",
-  });
+  const criteria = [
+    'Satisfacție generală',
+    'Siguranță',
+    'Lățime',
+    'Utilizabilitate',
+    'Accesibilitate',
+    'Nivel de modernizare',
+  ];
+  const issueLabels: { [key in keyof typeof issues]: string } = {
+    cars: "Mașini parcate",
+    signs: "Semne de circulație",
+    pavement: "Gropi sau denivelări",
+    stairs: "Prezenta scărilor/treptelor",
+    nature: "Natură neîngrijită",
+  };
+
+  const firstRated = ratings[criteria[0]] != null;
+
+  useEffect(() => {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`)
+      .then((res) => res.json())
+      .then((data) => setStreetName(data.address.road || 'Stradă necunoscută'))
+      .catch(() => setStreetName('Stradă necunoscută'));
+  }, [location]);
 
   const toggleIssue = (key: keyof typeof issues) => {
     setIssues((prev) => ({
@@ -35,20 +50,6 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
       [key]: !prev[key],
     }));
   };
-
-  const formatLabel = (key: string) =>
-  key.charAt(0).toUpperCase() + key.slice(1) + ' Issue';
-
-  const criteria = ["Satisfactie generala", "Siguranta", "Latime", "Utilizabilitate", "Accesibilitate", "Nivel modernizare"];
-  const [ratings, setRatings] = useState<{ [key: string]: number }>({});
-  const firstRated = ratings[criteria[0]] != null;
-
-  useEffect(() => {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`)
-      .then(res => res.json())
-      .then(data => setStreetName(data.address.road || "Unknown street"))
-      .catch(() => setStreetName("Unknown street"));
-  }, [location]);
 
   const handleSubmit = () => {
     if (!firstRated) return;
@@ -70,73 +71,63 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
     }, 1000);
   };
 
-  
   return (
     <div className="sidewalk-panel">
-      <h2>Acorda o nota acestui trotuar:</h2>
-      <p><strong>Street:</strong> {streetName}</p>
+      <h2>Evaluează acest trotuar</h2>
+      <p><strong>Stradă:</strong> {streetName}</p>
 
       <div className="ratings-container">
         {criteria.map((criterion) => (
           <div key={criterion} className="star-rating-line">
-            <label>{criterion}</label>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                onClick={() =>
-                  setRatings((prev) => ({
-                    ...prev,
-                    [criterion]: star,
-                  }))
-                }
-                className={ratings[criterion] === star ? "selected" : ""}
-              >
-                {star}★
-              </button>
-            ))}
+            <label className="rating-label">{criterion}</label>
+            <div className="star-rating">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  onClick={() =>
+                    setRatings((prev) => ({
+                      ...prev,
+                      [criterion]: star,
+                    }))
+                  }
+                  className={`star ${ratings[criterion] >= star ? 'filled' : ''}`}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
           </div>
         ))}
       </div>
 
-
       <legend>Probleme observate:</legend>
-      {Object.keys(issues).map((key) => (
-        <div key={key}>
-          <label>
-            <input
-              type="checkbox"
-              checked={issues[key as keyof typeof issues]}
-              onChange={() => toggleIssue(key as keyof typeof issues)}
-            />
-            {issueLabeles[key as keyof typeof issueLabeles]}
-          </label>
+        <div className="issues-column">
+          {Object.keys(issues).map((key) => (
+            <button
+              key={key}
+              className={`issue-button-full ${issues[key as keyof typeof issues] ? 'active' : ''}`}
+              onClick={() => toggleIssue(key as keyof typeof issues)}
+            >
+              {issueLabels[key as keyof typeof issues]}
+            </button>
+          ))}
         </div>
-      ))}
 
-      <div style={{ marginTop: '1rem' }}>
-        <label htmlFor="notes">Observatii generale:</label>
-        <br />
-        <textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={5}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            fontSize: '1rem',
-            resize: 'vertical',
-          }}
-          placeholder="Scrieți aici observațiile generale..."
-        />
+      <label htmlFor="notes">Observații generale:</label>
+      <textarea
+        id="notes"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        rows={5}
+        placeholder="Scrie aici observațiile generale..."
+      />
+
+      <div className="form-buttons">
+        <button disabled={!firstRated || submitting} onClick={handleSubmit}>
+          {submitting ? 'Se trimite...' : 'Trimite'}
+        </button>
+        <button className="cancel-btn" onClick={onClose}>Renunță</button>
       </div>
-
-      <button disabled={!firstRated || submitting} onClick={handleSubmit}>
-        {submitting ? 'Trimitere...' : 'Trimite'}
-      </button>
-      <button onClick={onClose}>Cancel</button>
     </div>
   );
 };
