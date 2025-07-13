@@ -1,6 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import './SidewalkFormModal.css';
 
+import { supabase } from '../utils/supabaseClient';
+
+async function submitReport(json : any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return alert('User not logged in');
+
+  const { location, ratings, issues, notes, timestamp } = json;
+
+  const { error } = await supabase.from('reports').insert({
+    user_id: user.id,
+    location: `POINT(${location[0]} ${location[1]})`,
+    timestamp,
+    satisfaction: ratings["Satisfacție generală"],
+    safety: ratings["Siguranță"],
+    width: ratings["Lățime"],
+    usability: ratings["Utilizabilitate"],
+    accessibility: ratings["Accesibilitate"],
+    modernization: ratings["Nivel de modernizare"],
+    cars: issues.cars,
+    signs: issues.signs,
+    pavement: issues.pavement,
+    stairs: issues.stairs,
+    nature: issues.nature,
+    notes
+  });
+
+  if (error) {
+    console.error('Insert error', error);
+  } else {
+    alert('Submitted successfully!');
+  }
+}
+
 interface SidewalkFormModalProps {
   location: [number, number];
   onClose: () => void;
@@ -65,6 +98,8 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
 
     console.log('Submitting to Supabase (mocked):', payload);
 
+    submitReport(payload);
+    
     setTimeout(() => {
       setSubmitting(false);
       onClose();

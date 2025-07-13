@@ -1,15 +1,20 @@
 import React from 'react';
 import { AuthProvider } from './auth/AuthProvider';
 import { MapProvider } from './map/MapProvider';
-import MapView from './map/MapView';
+import MapView from './components/MapView';
+import TopBar from './components/TopBar';
 
 function App() {
   return (
-    <AuthProvider>
+    <>
+      <AuthProvider>
+      <TopBar/>
       <MapProvider>
         <MapView />
       </MapProvider>
     </AuthProvider>
+    </>
+    
   );
 }
 
