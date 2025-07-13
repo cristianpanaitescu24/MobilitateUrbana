@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../utils/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 import './TopBar.css';
 
 const TopBar: React.FC = () => {
@@ -12,45 +12,30 @@ const TopBar: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error || !data.session) {
-        setError(error?.message || 'Login failed.');
-        return;
+      if (isRegister) {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error || !data.user) {
+          setError(error?.message || 'Registration failed.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error || !data.session) {
+          setError(error?.message || 'Login failed.');
+          setLoading(false);
+          return;
+        }
       }
-
       setShowModal(false);
     } catch (err: any) {
-      setError('Unexpected error during login.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error || !data.user) {
-        setError(error?.message || 'Registration failed.');
-        return;
-      }
-
-      setShowModal(false);
-    } catch (err: any) {
-      setError('Unexpected error during registration.');
+      setError(`Unexpected error during ${isRegister ? 'registration' : 'login'}.`);
     } finally {
       setLoading(false);
     }
@@ -79,23 +64,28 @@ const TopBar: React.FC = () => {
 
             {error && <div className="auth-error">{error}</div>}
 
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <form onSubmit={handleSubmit}>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
 
-            <button disabled={loading} onClick={isRegister ? handleRegister : handleLogin}>
-              {loading ? 'Please wait...' : isRegister ? 'Register' : 'Login'}
-            </button>
+              <button type="submit" disabled={loading}>
+                {loading ? 'Please wait...' : isRegister ? 'Register' : 'Login'}
+              </button>
+            </form>
 
             <button className="auth-cancel" onClick={() => setShowModal(false)}>
               Cancel

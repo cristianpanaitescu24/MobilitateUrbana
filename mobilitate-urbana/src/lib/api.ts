@@ -1,4 +1,4 @@
-import { middleOfBucharest } from "./constants";
+import { middleOfBucharest } from "../constants/constants";
 
 export interface LocationResponse {
   status: string;

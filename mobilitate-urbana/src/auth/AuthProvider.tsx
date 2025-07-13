@@ -5,16 +5,15 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { supabase } from '../utils/supabaseClient';
+import { supabase } from '../lib/supabaseClient';
 
-type User = {
+type AuthUser = {
   id: string;
   email: string;
 };
 
 type AuthContextType = {
-  user: User | null;
-  login: (user: User) => void;
+  user: AuthUser | null;
   logout: () => Promise<void>;
   loading: boolean;
 };
@@ -22,52 +21,48 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const login = (userData: User) => {
-    setUser(userData);
-  };
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
 
   useEffect(() => {
     const init = async () => {
       const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error("Failed to get user:", error.message);
+      }
+
       if (data?.user) {
         setUser({
           id: data.user.id,
           email: data.user.email || '',
         });
       }
+
       setLoading(false);
     };
 
     init();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-          });
-        } else {
-          setUser(null);
-        }
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user;
+      setUser(u ? { id: u.id, email: u.email || '' } : null);
+    });
 
     return () => {
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

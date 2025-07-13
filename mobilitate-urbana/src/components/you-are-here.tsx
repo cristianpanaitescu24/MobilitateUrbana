@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import {  middleOfBucharest } from "../lib/constants";
+import {  middleOfBucharest } from "../constants/constants";
 import { useMap } from "@vis.gl/react-maplibre";
 import { getLocation } from "../lib/api";
 

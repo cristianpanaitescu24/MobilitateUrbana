@@ -1,53 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabaseClient'; // adjust path
-import { Map } from '@vis.gl/react-maplibre';
-import { middleOfBucharest } from '../lib/constants';
+import { Map, Marker, MapMouseEvent } from '@vis.gl/react-maplibre';
+import { middleOfBucharest } from '../constants/constants';
+import { useUserReports } from '../hooks/useUserReports';
+
 import UserReportPins from './UserReportsPins';
 import YouAreHere from './you-are-here';
 import SidewalkFormModal from './SidewalkFormModal';
-import type { MapMouseEvent } from '@vis.gl/react-maplibre';
-
-interface Report {
-  id: string;
-  user_id: string;
-  location: string; // or whatever type your location is
-  timestamp?: string;
-  satisfaction?: number;
-  safety?: number;
-  // add other fields as needed
-}
+import { Report } from '../hooks/useUserReports';
 
 const MapView = () => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [clickLocation, setClickLocation] = useState<[number, number] | null>(null);
+  const { initialReports, loading } = useUserReports();
+
+  // State to hold all visible reports
   const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [clickLocation, setClickLocation] = useState<[number, number] | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  // Assuming you have user info from somewhere
-  const user = supabase.auth.getUser ? supabase.auth.getUser() : null;
-
+  // Once initialReports are loaded, set them locally
   useEffect(() => {
-    if (!user) return;
+    if (!loading && initialReports.length > 0) {
+      setReports(initialReports);
+    }
+  }, [initialReports, loading]);
 
-    const fetchReports = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from<'reports', Report>('reports')
-        .select('id, location, user_id, timestamp, satisfaction, safety')
-        .eq('user_id', user.id);
+  // Add new report to state
+  const addReport = (newReport: Report) => {
+    setReports((prev) => [...prev, newReport]);
+  };
 
-      if (error) {
-        console.error('Error fetching reports:', error);
-        setReports([]);
-      } else {
-        setReports(data ?? []);
-      }
-      setLoading(false);
-    };
-
-    fetchReports();
-  }, [user]);
-
+  // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
     setClickLocation([e.lngLat.lng, e.lngLat.lat]);
     setModalOpen(true);
@@ -61,16 +42,32 @@ const MapView = () => {
           latitude: middleOfBucharest[1],
           zoom: 13,
         }}
-        mapStyle="/styles/style_americana.json"
+        mapStyle="/styles/dark.json"
         onClick={handleMapClick}
       >
         <YouAreHere />
         <UserReportPins reports={reports} loading={loading} />
+
+        {clickLocation && modalOpen && (
+          <Marker
+            longitude={clickLocation[0]}
+            latitude={clickLocation[1]}
+            color="orange"
+          />
+        )}
       </Map>
 
       {modalOpen && clickLocation && (
-        <SidewalkFormModal location={clickLocation} onClose={() => setModalOpen(false)} />
+        <SidewalkFormModal
+          location={clickLocation}
+          onClose={() => setModalOpen(false)}
+          onSubmitSuccess={(newReport) => {
+            addReport(newReport);
+            // setModalOpen(false);
+          }}
+        />
       )}
+
     </>
   );
 };

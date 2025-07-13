@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
     "@vis.gl/react-maplibre": "1.0.0-alpha.4",
+    "lucide-react": "^0.525.0",
     "maplibre": "^0.0.1-security",
     "maplibre-gl": "^4.7.1",
     "react": "^18.3.1",
