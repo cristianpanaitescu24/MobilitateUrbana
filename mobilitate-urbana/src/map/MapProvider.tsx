@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import maplibregl from "maplibre-gl";
 import { MapContext } from "./MapContext";
 
