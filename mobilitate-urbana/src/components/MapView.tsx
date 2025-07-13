@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Map, Marker, MapMouseEvent } from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
@@ -63,7 +63,6 @@ const MapView = () => {
           onClose={() => setModalOpen(false)}
           onSubmitSuccess={(newReport) => {
             addReport(newReport);
-            // setModalOpen(false);
           }}
         />
       )}
