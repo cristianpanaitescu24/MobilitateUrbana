@@ -17,13 +17,8 @@ export interface Report {
   accessibility?: number;
   modernization?: number;
 
-  cars?: boolean;
-  signs?: boolean;
-  pavement?: boolean;
-  stairs?: boolean;
-  nature?: boolean;
+  tags?: string[];
 
-  notes?: string;
   street?: string;
 }
 
@@ -40,39 +35,32 @@ export const useUserReports = () => {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("reports_with_coords")
-        .select(`
-          id, user_id, timestamp,
-          satisfaction, safety, width, usability,
-          accessibility, modernization,
-          cars, signs, pavement, stairs, nature,
-          notes, lng, lat
-        `)
+        .from("reports")
+        .select(`id, user_id, timestamp, tags, ratings, lat, lon`)
         .eq("user_id", user.id);
 
       if (error) {
         console.error("Error fetching reports:", error.message);
         setInitialReports([]);
       } else if (data) {
-        const formatted = data.map((r: any): Report => ({
-          id: r.id,
-          user_id: r.user_id,
-          timestamp: r.timestamp,
-          lng: r.lng,
-          lat: r.lat,
-          satisfaction: r.satisfaction ?? undefined,
-          safety: r.safety ?? undefined,
-          width: r.width ?? undefined,
-          usability: r.usability ?? undefined,
-          accessibility: r.accessibility ?? undefined,
-          modernization: r.modernization ?? undefined,
-          cars: r.cars ?? false,
-          signs: r.signs ?? false,
-          pavement: r.pavement ?? false,
-          stairs: r.stairs ?? false,
-          nature: r.nature ?? false,
-          notes: r.notes ?? "",
-        }));
+        const formatted = data.map((r: any): Report => {
+          const ratings = typeof r.ratings === "string" ? JSON.parse(r.ratings) : r.ratings;
+
+          return {
+            id: r.id,
+            user_id: r.user_id,
+            timestamp: r.timestamp,
+            lat: r.lat,
+            lng: r.lon,
+            satisfaction: ratings?.satisfaction,
+            safety: ratings?.safety,
+            width: ratings?.width,
+            usability: ratings?.usability,
+            accessibility: ratings?.accessibility,
+            modernization: ratings?.modernization,
+            tags: r.tags ?? [],
+          };
+        });
 
         setInitialReports(formatted);
         lastFetchedUserId.current = user.id;

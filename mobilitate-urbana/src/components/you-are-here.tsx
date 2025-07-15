@@ -17,7 +17,7 @@ export default function YouAreHere() {
         typeof location[1] === "number" &&
         (location[0] !== middleOfBucharest[0] || location[1] !== middleOfBucharest[1])
       ) {
-        map.flyTo({ center: location, zoom: 8 });
+        map.flyTo({ center: location, zoom: 12 });
       }
     })();
   }, [map]);

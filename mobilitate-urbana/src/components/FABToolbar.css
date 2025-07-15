@@ -1,0 +1,25 @@
+.fab-toolbar {
+  position: absolute;
+  top: 100px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.fab-toolbar button {
+  background-color: #ffffff;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease;
+}
+
+.fab-toolbar button:hover {
+  background-color: #f0f0f0;
+}
