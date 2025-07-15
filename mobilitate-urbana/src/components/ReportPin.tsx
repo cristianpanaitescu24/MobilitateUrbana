@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Marker, Popup } from "@vis.gl/react-maplibre";
-import type { Report } from "../hooks/useUserReports";
+import type { Report } from "../components/IReport";
 import { PinIcon } from "lucide-react";
 
 interface ReportPinProps {
@@ -13,8 +13,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
   return (
     <>
       <Marker
-        longitude={report.lng}
-        latitude={report.lat}
+        longitude={report.location[1]}
+        latitude={report.location[0]}
         anchor="bottom"
         onMouseEnter={() => setShowPopup(true)}
         onMouseLeave={() => setShowPopup(false)}
@@ -24,8 +24,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
 
       {showPopup && (
         <Popup
-          longitude={report.lng}
-          latitude={report.lat}
+          longitude={report.location[1]}
+          latitude={report.location[0]}
           closeButton={false}
           closeOnClick={false}
           anchor="top"
@@ -33,24 +33,12 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
           <div className="text-sm max-w-xs space-y-1">
             <p className="font-bold text-base">📍 Report</p>
             <p><b>Date:</b> {new Date(report.timestamp || "").toLocaleString()}</p>
-            {report.satisfaction !== undefined && (
-              <p><b>Satisfaction:</b> {report.satisfaction}</p>
-            )}
-            {report.safety !== undefined && (
-              <p><b>Safety:</b> {report.safety}</p>
-            )}
-            {report.width !== undefined && (
-              <p><b>Width:</b> {report.width}</p>
-            )}
-            {report.usability !== undefined && (
-              <p><b>Usability:</b> {report.usability}</p>
-            )}
-            {report.accessibility !== undefined && (
-              <p><b>Accessibility:</b> {report.accessibility}</p>
-            )}
-            {report.modernization !== undefined && (
-              <p><b>Modernization:</b> {report.modernization}</p>
-            )}
+              <p><b>Satisfaction:</b>   {report.ratings?.satisfaction}</p>
+              <p><b>Safety:</b>         {report.ratings?.safety}</p>
+              <p><b>Width:</b>          {report.ratings?.width}</p>
+              <p><b>Usability:</b>      {report.ratings?.usability}</p>
+              <p><b>Accessibility:</b>  {report.ratings?.accessibility}</p>
+              <p><b>Modernization:</b>  {report.ratings?.modernization}</p>
             <div className="text-xs text-gray-500">
               <p><b>Issues:</b> {report.tags?.length ? report.tags.join(", ") : "None"}</p>
             </div>

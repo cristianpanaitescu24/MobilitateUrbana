@@ -1,26 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { supabase } from "../lib/supabaseClient";
-
-export interface Report {
-  id: string;
-  user_id: string;
-  timestamp?: string;
-
-  lat?: number;
-  lng?: number;
-
-  satisfaction?: number;
-  safety?: number;
-  width?: number;
-  usability?: number;
-  accessibility?: number;
-  modernization?: number;
-
-  tags?: string[];
-
-  street?: string;
-}
+import { Report } from "../components/IReport"
 
 export const useUserReports = () => {
   const { user } = useAuth();
@@ -50,14 +31,8 @@ export const useUserReports = () => {
             id: r.id,
             user_id: r.user_id,
             timestamp: r.timestamp,
-            lat: r.lat,
-            lng: r.lon,
-            satisfaction: ratings?.satisfaction,
-            safety: ratings?.safety,
-            width: ratings?.width,
-            usability: ratings?.usability,
-            accessibility: ratings?.accessibility,
-            modernization: ratings?.modernization,
+            location: [r.lat, r.lon],
+            ratings: ratings,
             tags: r.tags ?? [],
           };
         });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Marker, Popup } from '@vis.gl/react-maplibre';
-import { Report } from '../hooks/useUserReports';
+import { Report } from '../components/IReport';
 import '../components/UserReportsPins.css';
 
 interface Props {
@@ -34,16 +34,16 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
   return (
     <>
       {reports.map((report) => {
-        if (report.lat == null || report.lng == null) return null;
+        if (report.location == null ) return null;
 
         const isSelected = selectedReport?.id === report.id;
-        const color = getColorForSatisfaction(report.satisfaction);
+        const color = getColorForSatisfaction(report.ratings.satisfaction);
 
         return (
           <Marker
             key={report.id}
-            longitude={report.lng}
-            latitude={report.lat}
+            longitude={report.location[1]}
+            latitude={report.location[0]}
             anchor="center"
             onClick={(e: maplibregl.MapLayerMouseEvent) => {
               e.originalEvent.stopPropagation();
@@ -53,16 +53,16 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
             <div
               className={`marker-dot${isSelected ? ' selected' : ''}`}
               style={{ backgroundColor: color }}
-              title={`Satisfacție: ${report.satisfaction ?? 'N/A'}`}
+              title={`Satisfacție: ${report.ratings.satisfaction ?? 'N/A'}`}
             />
           </Marker>
         );
       })}
 
-      {selectedReport && selectedReport.lat != null && selectedReport.lng != null && (
+      {selectedReport && selectedReport.location != null && (
         <Popup
-          longitude={selectedReport.lng}
-          latitude={selectedReport.lat}
+          longitude={selectedReport.location[1]}
+          latitude={selectedReport.location[0]}
           onClose={() => setSelectedReport(null)}
           closeButton
         >
@@ -71,12 +71,12 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
             <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
 
             <>
-            {renderRatingRow("Satisfacție:", selectedReport.satisfaction)}
-            {renderRatingRow("Siguranță:", selectedReport.safety)}
-            {renderRatingRow("Lățime:", selectedReport.width)}
-            {renderRatingRow("Utilizabilitate:", selectedReport.usability)}
-            {renderRatingRow("Accesibilitate:", selectedReport.accessibility)}
-            {renderRatingRow("Modernizare:", selectedReport.modernization)}
+            {renderRatingRow("Satisfacție:", selectedReport.ratings.satisfaction)}
+            {renderRatingRow("Siguranță:", selectedReport.ratings.safety)}
+            {renderRatingRow("Lățime:", selectedReport.ratings.width)}
+            {renderRatingRow("Utilizabilitate:", selectedReport.ratings.usability)}
+            {renderRatingRow("Accesibilitate:", selectedReport.ratings.accessibility)}
+            {renderRatingRow("Modernizare:", selectedReport.ratings.modernization)}
             </>
 
             {Array.isArray(selectedReport.tags) && selectedReport.tags.length > 0 && (

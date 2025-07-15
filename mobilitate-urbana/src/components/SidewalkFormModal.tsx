@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './SidewalkFormModal.css';
 import { submitReport } from '../lib/submitReport';
 import { TAG_LABELS, CRITERIA_LABELS } from '../constants/formLabels';
+import { Report } from '../components/IReport';
 
 const criteria = Object.entries(CRITERIA_LABELS);
 const tagKeys = Object.keys(TAG_LABELS);
@@ -9,10 +10,14 @@ const tagKeys = Object.keys(TAG_LABELS);
 interface SidewalkFormModalProps {
   location: [number, number];
   onClose: () => void;
-  onSubmitSuccess?: (succes: Boolean) => void;
+  onSubmitSuccess?: (success: boolean, report?: Report) => void;
 }
 
-const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose, onSubmitSuccess }) => {
+const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
+  location,
+  onClose,
+  onSubmitSuccess,
+}) => {
   const [submitting, setSubmitting] = useState(false);
   const [streetName, setStreetName] = useState('Se încarcă...');
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
@@ -20,7 +25,9 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
   const firstRated = ratings[criteria[0][0]] != null;
 
   useEffect(() => {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`)
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`
+    )
       .then((res) => res.json())
       .then((data) => setStreetName(data.address.road || 'Stradă necunoscută'))
       .catch(() => setStreetName('Stradă necunoscută'));
@@ -37,7 +44,7 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
 
   const toggleTag = (tag: string) => {
     setTags((prev) =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
@@ -52,14 +59,20 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
       timestamp: new Date().toISOString(),
     };
 
-    const success = await submitReport(payload);
-    if (success) {
-      localStorage.setItem('lastReportConfig', JSON.stringify({ ratings, tags }));
-      onSubmitSuccess?.(success);
+    const newReport = await submitReport(payload);
+
+    if (newReport) {
+      localStorage.setItem(
+        'lastReportConfig',
+        JSON.stringify({ ratings, tags })
+      );
+      onSubmitSuccess?.(true, newReport);
       onClose();
     } else {
-      alert("A apărut o eroare.");
+      alert('A apărut o eroare.');
+      onSubmitSuccess?.(false);
     }
+
     setSubmitting(false);
   };
 
@@ -80,7 +93,9 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
   return (
     <div className="sidewalk-panel">
       <h2>Acordă o notă trotuarului</h2>
-      <p><strong>Strada:</strong> {streetName}</p>
+      <p>
+        <strong>Strada:</strong> {streetName}
+      </p>
 
       <div className="ratings-container">
         {criteria.map(([key, label]) => (
@@ -125,7 +140,9 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({ location, onClose
         </button>
         <button onClick={handleLastConfig}>Ultimul rating</button>
         <button onClick={handleReset}>Resetează</button>
-        <button className="cancel-btn" onClick={onClose}>Renunță</button>
+        <button className="cancel-btn" onClick={onClose}>
+          Renunță
+        </button>
       </div>
     </div>
   );

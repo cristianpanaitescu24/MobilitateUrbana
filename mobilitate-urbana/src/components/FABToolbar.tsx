@@ -1,7 +1,7 @@
 import React from 'react';
 import './FABToolbar.css';
 
-import { LocateFixed, Plus, ZoomIn, ZoomOut } from 'lucide-react';
+// import { LocateFixed, Plus, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface FABToolbarProps {
   onZoomIn?: () => void;

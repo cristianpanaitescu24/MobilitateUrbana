@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { Report } from '../components/IReport'
 
 export interface SubmitPayload {
   location: [number, number];
@@ -7,11 +8,11 @@ export interface SubmitPayload {
   timestamp: string;
 }
 
-export async function submitReport(payload: SubmitPayload): Promise<boolean> {
+export async function submitReport(payload: SubmitPayload): Promise<Report | null> {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) {
     alert('Eroare: Utilizatorul nu este autentificat.');
-    return false;
+    return null;
   }
 
   const { location, ratings, tags, timestamp } = payload;
@@ -28,9 +29,18 @@ export async function submitReport(payload: SubmitPayload): Promise<boolean> {
   if (error) {
     console.error('Insert error', error);
     alert('Eroare la trimiterea raportului.');
-    return false;
+    return null;
   }
 
   alert('Raport trimis cu succes!');
-  return true;
+  const report: Report = {
+    id: "null",
+    user_id: user.id,
+    timestamp: timestamp,
+    location: location,
+    ratings: ratings,
+    tags: tags ?? [],
+  };
+
+  return report;
 }

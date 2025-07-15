@@ -6,7 +6,7 @@ import { useUserReports } from '../hooks/useUserReports';
 import UserReportPins from './UserReportsPins';
 import YouAreHere from './you-are-here';
 import SidewalkFormModal from './SidewalkFormModal';
-import { Report } from '../hooks/useUserReports';
+import { Report } from '../components/IReport';
 // import FABToolbar from '../components/FABToolbar';
 
 const MapView = () => {
@@ -64,8 +64,10 @@ const MapView = () => {
         <SidewalkFormModal
           location={clickLocation}
           onClose={() => setModalOpen(false)}
-          onSubmitSuccess={(success) => {
-            // addReport();
+          onSubmitSuccess={(success, newReport) => {
+            if (success && newReport) {
+              addReport(newReport);
+            }
           }}
         />
       )}
