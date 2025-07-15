@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Marker, Popup } from '@vis.gl/react-maplibre';
-import { Report } from '../hooks/useUserReports';
-import { criteria, criteriaLabels, issueLabels } from '../constants/formLabels';
+import { Report } from '../components/IReport';
+import '../components/UserReportsPins.css';
 
 interface Props {
   reports: Report[];
@@ -15,6 +15,17 @@ const getColorForSatisfaction = (satisfaction?: number): string => {
   return `hsl(${hue}, 80%, 50%)`;
 };
 
+const renderRatingRow = (label: string, value?: number) => (
+  <div className="report-rating-row">
+    <span><strong>{label}</strong></span>
+    <div className="star-rating">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span key={i}>{i <= (value ?? 0) ? "★" : "☆"}</span>
+      ))}
+    </div>
+  </div>
+);
+
 const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
@@ -23,16 +34,16 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
   return (
     <>
       {reports.map((report) => {
-        if (report.lat == null || report.lng == null) return null;
+        if (report.location == null ) return null;
 
         const isSelected = selectedReport?.id === report.id;
-        const color = getColorForSatisfaction(report.satisfaction);
+        const color = getColorForSatisfaction(report.ratings.satisfaction);
 
         return (
           <Marker
             key={report.id}
-            longitude={report.lng}
-            latitude={report.lat}
+            longitude={report.location[1]}
+            latitude={report.location[0]}
             anchor="center"
             onClick={(e: maplibregl.MapLayerMouseEvent) => {
               e.originalEvent.stopPropagation();
@@ -40,57 +51,38 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
             }}
           >
             <div
-              style={{
-                width: isSelected ? 20 : 12,
-                height: isSelected ? 20 : 12,
-                borderRadius: '50%',
-                backgroundColor: color,
-                border: isSelected ? '2px solid white' : '1px solid white',
-                boxShadow: isSelected
-                  ? '0 0 10px 4px rgba(255, 255, 255, 0.6)'
-                  : '0 0 4px rgba(0, 0, 0, 0.3)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              title={`Satisfacție: ${report.satisfaction ?? 'N/A'}`}
+              className={`marker-dot${isSelected ? ' selected' : ''}`}
+              style={{ backgroundColor: color }}
+              title={`Satisfacție: ${report.ratings.satisfaction ?? 'N/A'}`}
             />
           </Marker>
         );
       })}
 
-      {selectedReport && selectedReport.lat != null && selectedReport.lng != null && (
+      {selectedReport && selectedReport.location != null && (
         <Popup
-          longitude={selectedReport.lng}
-          latitude={selectedReport.lat}
+          longitude={selectedReport.location[1]}
+          latitude={selectedReport.location[0]}
           onClose={() => setSelectedReport(null)}
           closeButton
         >
-          <div style={{ maxWidth: 240 }}>
-            <h4>Detalii raport</h4>
+          <div style={{ maxWidth: 260 }}>
+            <h4 className="font-semibold mb-1">📍 Detalii raport</h4>
+            <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
 
-            {/* Ratings */}
-            <ul style={{ padding: 0, listStyle: 'none', marginBottom: 10 }}>
-              {criteria.map((key) => (
-                <li key={key}>
-                  <strong>{criteriaLabels[key]}:</strong>{" "}
-                  {selectedReport[key] ?? '—'}
-                </li>
-              ))}
-            </ul>
+            <>
+            {renderRatingRow("Satisfacție:", selectedReport.ratings.satisfaction)}
+            {renderRatingRow("Siguranță:", selectedReport.ratings.safety)}
+            {renderRatingRow("Lățime:", selectedReport.ratings.width)}
+            {renderRatingRow("Utilizabilitate:", selectedReport.ratings.usability)}
+            {renderRatingRow("Accesibilitate:", selectedReport.ratings.accessibility)}
+            {renderRatingRow("Modernizare:", selectedReport.ratings.modernization)}
+            </>
 
-            {/* Issues */}
-            <p><strong>Probleme observate:</strong></p>
-            <ul style={{ paddingLeft: 20 }}>
-              {Object.entries(issueLabels).map(([key, label]) =>
-                selectedReport[key as keyof typeof issueLabels] ? (
-                  <li key={key}>{label}</li>
-                ) : null
-              )}
-            </ul>
-
-            {/* Notes */}
-            {selectedReport.notes && (
-              <p><strong>Observații:</strong> {selectedReport.notes}</p>
+            {Array.isArray(selectedReport.tags) && selectedReport.tags.length > 0 && (
+              <div className="mt-1 text-sm text-gray-600">
+                <p><strong>Probleme:</strong> {selectedReport.tags.join(', ')}</p>
+              </div>
             )}
           </div>
         </Popup>

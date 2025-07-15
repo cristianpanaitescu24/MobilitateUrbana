@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Marker, Popup } from "@vis.gl/react-maplibre";
-import type { Report } from "../hooks/useUserReports";
-import { PinIcon } from "lucide-react"; // optional: use your own icon or a maplibre symbol
+import type { Report } from "../components/IReport";
+import { PinIcon } from "lucide-react";
 
 interface ReportPinProps {
   report: Report;
@@ -13,8 +13,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
   return (
     <>
       <Marker
-        longitude={report.lng}
-        latitude={report.lat}
+        longitude={report.location[1]}
+        latitude={report.location[0]}
         anchor="bottom"
         onMouseEnter={() => setShowPopup(true)}
         onMouseLeave={() => setShowPopup(false)}
@@ -24,8 +24,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
 
       {showPopup && (
         <Popup
-          longitude={report.lng}
-          latitude={report.lat}
+          longitude={report.location[1]}
+          latitude={report.location[0]}
           closeButton={false}
           closeOnClick={false}
           anchor="top"
@@ -33,18 +33,14 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
           <div className="text-sm max-w-xs space-y-1">
             <p className="font-bold text-base">📍 Report</p>
             <p><b>Date:</b> {new Date(report.timestamp || "").toLocaleString()}</p>
-            <p><b>Satisfaction:</b> {report.satisfaction ?? "N/A"}</p>
-            <p><b>Safety:</b> {report.safety ?? "N/A"}</p>
-            <p><b>Width:</b> {report.width ?? "N/A"}</p>
-            <p><b>Notes:</b> {report.notes || "None"}</p>
+              <p><b>Satisfaction:</b>   {report.ratings?.satisfaction}</p>
+              <p><b>Safety:</b>         {report.ratings?.safety}</p>
+              <p><b>Width:</b>          {report.ratings?.width}</p>
+              <p><b>Usability:</b>      {report.ratings?.usability}</p>
+              <p><b>Accessibility:</b>  {report.ratings?.accessibility}</p>
+              <p><b>Modernization:</b>  {report.ratings?.modernization}</p>
             <div className="text-xs text-gray-500">
-              <p>Issues: {[
-                report.cars && "🚗 Cars",
-                report.pavement && "🧱 Pavement",
-                report.stairs && "🪜 Stairs",
-                report.signs && "🚧 Signs",
-                report.nature && "🌿 Nature",
-              ].filter(Boolean).join(", ") || "None"}</p>
+              <p><b>Issues:</b> {report.tags?.length ? report.tags.join(", ") : "None"}</p>
             </div>
           </div>
         </Popup>

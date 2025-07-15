@@ -1,80 +1,46 @@
 import { supabase } from './supabaseClient';
-import { Report } from '../hooks/useUserReports'; // Import correct type
+import { Report } from '../components/IReport'
 
 export interface SubmitPayload {
   location: [number, number];
   ratings: { [key: string]: number };
-  issues: {
-    cars: boolean;
-    signs: boolean;
-    pavement: boolean;
-    stairs: boolean;
-    nature: boolean;
-  };
-  notes?: string;
+  tags: string[];
   timestamp: string;
 }
 
 export async function submitReport(payload: SubmitPayload): Promise<Report | null> {
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) {
-    console.error('User fetch error', userError);
     alert('Eroare: Utilizatorul nu este autentificat.');
     return null;
   }
 
-  const { location, ratings, issues, notes, timestamp } = payload;
+  const { location, ratings, tags, timestamp } = payload;
 
-  const { data, error } = await supabase
-    .from('reports')
-    .insert({
-      user_id: user.id,
-      location: `POINT(${location[0]} ${location[1]})`,
-      timestamp,
-      satisfaction: ratings.satisfaction ?? null,
-      safety: ratings.safety ?? null,
-      width: ratings.width ?? null,
-      usability: ratings.usability ?? null,
-      accessibility: ratings.accessibility ?? null,
-      modernization: ratings.modernization ?? null,
-      ...issues,
-      notes,
-    })
-    .select() // 👈 return inserted record
-    .single(); // 👈 only one row expected
+  const { error } = await supabase.from('reports').insert({
+    user_id: user.id,
+    lat: location[1],
+    lon: location[0],
+    ratings,
+    tags,
+    timestamp
+  });
 
-  if (error || !data) {
+  if (error) {
     console.error('Insert error', error);
-    alert('Eroare la trimiterea raportului. Încearcă din nou.');
+    alert('Eroare la trimiterea raportului.');
     return null;
   }
 
-  const coords = location;
+  alert('Raport trimis cu succes!');
   const report: Report = {
-    id: data.id,
+    id: "null",
     user_id: user.id,
-    timestamp,
-    lng: coords[0],
-    lat: coords[1],
-    satisfaction: data.satisfaction ?? undefined,
-    safety: data.safety ?? undefined,
-    width: data.width ?? undefined,
-    usability: data.usability ?? undefined,
-    accessibility: data.accessibility ?? undefined,
-    modernization: data.modernization ?? undefined,
-    cars: data.cars ?? false,
-    signs: data.signs ?? false,
-    pavement: data.pavement ?? false,
-    stairs: data.stairs ?? false,
-    nature: data.nature ?? false,
-    notes: data.notes ?? '',
-    street: data.street ?? '',
+    timestamp: timestamp,
+    location: location,
+    ratings: ratings,
+    tags: tags ?? [],
   };
 
-  alert('Raport trimis cu succes!');
   return report;
 }
