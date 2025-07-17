@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Marker, Popup } from '@vis.gl/react-maplibre';
 import { Report } from '../components/IReport';
 import '../components/UserReportsPins.css';
@@ -6,6 +5,9 @@ import '../components/UserReportsPins.css';
 interface Props {
   reports: Report[];
   loading: boolean;
+  onDeleteReport: (id: string) => void;
+  selectedReport: Report | null;
+  setSelectedReport: (r: Report | null) => void;
 }
 
 const getColorForSatisfaction = (satisfaction?: number): string => {
@@ -26,8 +28,7 @@ const renderRatingRow = (label: string, value?: number) => (
   </div>
 );
 
-const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, selectedReport, setSelectedReport}) => {
 
   if (loading) return null;
   console.log(reports);
@@ -85,6 +86,7 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
               </div>
             )}
           </div>
+          <button className="delete-button" title="Șterge raportul" onClick={() => onDeleteReport(selectedReport.id)}>🗑️ Șterge</button>
         </Popup>
       )}
     </>

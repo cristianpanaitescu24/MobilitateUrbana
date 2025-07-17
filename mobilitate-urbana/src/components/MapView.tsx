@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Map, Marker, MapMouseEvent, useMap } from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
+import { deleteReport } from '../lib/deleteReport';
 
 import UserReportPins from './UserReportsPins';
 import YouAreHere from './you-are-here';
@@ -16,6 +17,7 @@ const MapView = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [clickLocation, setClickLocation] = useState<[number, number] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   // Once initialReports are loaded, set them locally
   useEffect(() => {
@@ -30,6 +32,19 @@ const MapView = () => {
   };
 
   const { current: map } = useMap();
+
+const handleDeleteReport = async (id: string) => {
+    const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
+    if (!confirmed) return;
+
+    const success = await deleteReport(id);
+    if (success) {
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      setSelectedReport(null);
+    } else {
+      alert('A apărut o eroare la ștergere.');
+    }
+  };
 
   // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
@@ -59,7 +74,13 @@ const MapView = () => {
         onClick={handleMapClick}
       >
         <YouAreHere />
-        <UserReportPins reports={reports} loading={loading} />
+        <UserReportPins
+          reports={reports}
+          loading={loading}
+          onDeleteReport={handleDeleteReport}
+          selectedReport={selectedReport}
+          setSelectedReport={setSelectedReport}
+        />
 
         {clickLocation && modalOpen && (
           <Marker
