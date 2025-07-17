@@ -22,19 +22,17 @@ const TopBar: React.FC = () => {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error || !data.user) {
           setError(error?.message || 'Registration failed.');
-          setLoading(false);
           return;
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error || !data.session) {
           setError(error?.message || 'Login failed.');
-          setLoading(false);
           return;
         }
       }
       setShowModal(false);
-    } catch (err: any) {
+    } catch {
       setError(`Unexpected error during ${isRegister ? 'registration' : 'login'}.`);
     } finally {
       setLoading(false);
@@ -44,7 +42,7 @@ const TopBar: React.FC = () => {
   return (
     <>
       <div className="user-auth-bar">
-        <div className="app-title">My App</div>
+        <div className="app-title">Mobilitate pietonală</div>
         <div className="user-section">
           {user ? (
             <>
@@ -73,7 +71,6 @@ const TopBar: React.FC = () => {
                 required
                 autoFocus
               />
-
               <input
                 type="password"
                 placeholder="Password"
@@ -81,7 +78,6 @@ const TopBar: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-
               <button type="submit" disabled={loading}>
                 {loading ? 'Please wait...' : isRegister ? 'Register' : 'Login'}
               </button>

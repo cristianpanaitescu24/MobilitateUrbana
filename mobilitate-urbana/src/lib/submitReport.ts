@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { Report } from '../components/IReport'
+import { PostgrestError } from '@supabase/supabase-js';
 
 export interface SubmitPayload {
   location: [number, number];
@@ -8,8 +9,12 @@ export interface SubmitPayload {
   timestamp: string;
 }
 
+var internalId = 0;
+
+
 export async function submitReport(payload: SubmitPayload): Promise<Report | null> {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
+
   if (userError || !user) {
     alert('Eroare: Utilizatorul nu este autentificat.');
     return null;
@@ -26,15 +31,16 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
     timestamp
   });
 
-  if (error) {
-    console.error('Insert error', error);
-    alert('Eroare la trimiterea raportului.');
+  if(error)
+  {
+    console.log("submitReport error: ", error);
     return null;
   }
 
-  alert('Raport trimis cu succes!');
+  internalId = internalId + 1;
+
   const report: Report = {
-    id: "null",
+    id: 'local_id_' + internalId,
     user_id: user.id,
     timestamp: timestamp,
     location: location,

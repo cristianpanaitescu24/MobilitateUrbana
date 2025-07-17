@@ -16,7 +16,7 @@ const getColorForSatisfaction = (satisfaction?: number): string => {
 };
 
 const renderRatingRow = (label: string, value?: number) => (
-  <div className="report-rating-row">
+  <div className="report-rating-row" key={label}>
     <span><strong>{label}</strong></span>
     <div className="star-rating">
       {[1, 2, 3, 4, 5].map((i) => (
@@ -30,18 +30,18 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   if (loading) return null;
-
+  console.log(reports);
   return (
     <>
-      {reports.map((report) => {
-        if (report.location == null ) return null;
+      {reports.map((report, index) => {
+        if (!report.location) return null;
 
         const isSelected = selectedReport?.id === report.id;
         const color = getColorForSatisfaction(report.ratings.satisfaction);
 
         return (
           <Marker
-            key={report.id}
+            key={report.id ?? `marker-${index}`} // <- fallback to index if no ID
             longitude={report.location[1]}
             latitude={report.location[0]}
             anchor="center"
@@ -59,7 +59,7 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
         );
       })}
 
-      {selectedReport && selectedReport.location != null && (
+      {selectedReport && selectedReport.location && (
         <Popup
           longitude={selectedReport.location[1]}
           latitude={selectedReport.location[0]}
@@ -70,14 +70,14 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
             <h4 className="font-semibold mb-1">📍 Detalii raport</h4>
             <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
 
-            <>
-            {renderRatingRow("Satisfacție:", selectedReport.ratings.satisfaction)}
-            {renderRatingRow("Siguranță:", selectedReport.ratings.safety)}
-            {renderRatingRow("Lățime:", selectedReport.ratings.width)}
-            {renderRatingRow("Utilizabilitate:", selectedReport.ratings.usability)}
-            {renderRatingRow("Accesibilitate:", selectedReport.ratings.accessibility)}
-            {renderRatingRow("Modernizare:", selectedReport.ratings.modernization)}
-            </>
+            {[
+              ["Satisfacție:", selectedReport.ratings.satisfaction],
+              ["Siguranță:", selectedReport.ratings.safety],
+              ["Lățime:", selectedReport.ratings.width],
+              ["Utilizabilitate:", selectedReport.ratings.usability],
+              ["Accesibilitate:", selectedReport.ratings.accessibility],
+              ["Modernizare:", selectedReport.ratings.modernization]
+            ].map(([label, value]) => renderRatingRow(label as string, value as number))}
 
             {Array.isArray(selectedReport.tags) && selectedReport.tags.length > 0 && (
               <div className="mt-1 text-sm text-gray-600">

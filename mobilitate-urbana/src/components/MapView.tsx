@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Marker, MapMouseEvent } from '@vis.gl/react-maplibre';
+import { Map, Marker, MapMouseEvent, useMap } from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
 
@@ -29,10 +29,22 @@ const MapView = () => {
     setReports((prev) => [...prev, newReport]);
   };
 
+  const { current: map } = useMap();
+
   // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
     setClickLocation([e.lngLat.lng, e.lngLat.lat]);
     setModalOpen(true);
+    
+    if(map) {
+      console.log("FLY");
+      map.flyTo({
+        center: [e.lngLat.lng, e.lngLat.lat],
+        zoom: 17
+      });
+    }
+      
+    else console.log("NOT FLY");
   };
 
   return (
@@ -61,15 +73,15 @@ const MapView = () => {
       </Map>
 
       {modalOpen && clickLocation && (
-        <SidewalkFormModal
-          location={clickLocation}
-          onClose={() => setModalOpen(false)}
-          onSubmitSuccess={(success, newReport) => {
-            if (success && newReport) {
-              addReport(newReport);
-            }
-          }}
-        />
+          <SidewalkFormModal
+            location={clickLocation}
+            onClose={() => setModalOpen(false)}
+            onSubmitSuccess={(newReport) => {
+              if (newReport) {
+                addReport(newReport);
+              }
+            }}
+          />
       )}
 
     </>

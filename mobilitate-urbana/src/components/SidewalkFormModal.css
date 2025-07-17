@@ -33,6 +33,15 @@
   margin-bottom: 16px;
 }
 
+.scrollable-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  margin-top: 10px;
+  padding-right: 8px;
+}
+
 .star-rating-line {
   display: flex;
   justify-content: space-between;
@@ -45,19 +54,38 @@
   flex: 1;
 }
 
+.star-rating-wrapper {
+  border: 2px solid #2e2e2e;
+  border-radius: 6px;
+  padding: 0px 6px;
+  background-color: #88bcba;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  height: fit-content;
+}
+
 .star-rating {
   display: flex;
-  gap: 4px;
-  font-size: 1.2rem;
+  gap: 0;
+  font-size: 2rem;
   cursor: pointer;
-  flex: 1;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  height: fit-content;
+  line-height: 1; /* reduce spacing */
 }
 
 .star {
-  color: lightgray;
-  cursor: pointer;
+  color: rgb(236, 236, 236);
   transition: color 0.2s;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .star.filled {
@@ -83,6 +111,7 @@
   text-align: left;
   font-size: 0.9rem;
   transition: background-color 0.2s;
+  text-align: center;
 }
 
 .tag-button.active {
@@ -100,6 +129,7 @@
   justify-content: space-between;
   gap: 10px;
   margin-top: 12px;
+  flex-shrink: 0;
 }
 
 .form-buttons button {
@@ -136,5 +166,37 @@
 
   .form-buttons button {
     flex: 1 1 100%;
+  }
+}
+
+
+.sidewalk-modal {
+  position: fixed;
+  top: 30px;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 450px;
+  background-color: #f0f0f0;
+  padding: 1rem;
+  z-index: 1000;
+  border-left: 2px solid #555;
+  border-radius: 0;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden; /* not y anymore */
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px); /* ensure it fits viewport */
+}
+
+@media (max-width: 768px) {
+  .sidewalk-modal {
+    top: 30px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    border-radius: 12px 12px 0 0;
+    height: calc(100vh - 30px);
   }
 }

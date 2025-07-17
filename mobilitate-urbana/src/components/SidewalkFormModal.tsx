@@ -3,6 +3,7 @@ import './SidewalkFormModal.css';
 import { submitReport } from '../lib/submitReport';
 import { TAG_LABELS, CRITERIA_LABELS } from '../constants/formLabels';
 import { Report } from '../components/IReport';
+import FloatingMessage from './FloatingMessage';
 
 const criteria = Object.entries(CRITERIA_LABELS);
 const tagKeys = Object.keys(TAG_LABELS);
@@ -10,7 +11,7 @@ const tagKeys = Object.keys(TAG_LABELS);
 interface SidewalkFormModalProps {
   location: [number, number];
   onClose: () => void;
-  onSubmitSuccess?: (success: boolean, report?: Report) => void;
+  onSubmitSuccess?: (report?: Report | null) => void;
 }
 
 const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
@@ -23,13 +24,19 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [tags, setTags] = useState<string[]>([]);
   const firstRated = ratings[criteria[0][0]] != null;
+  const [toast, setToast] = useState<JSX.Element | null>(null);
 
   useEffect(() => {
     fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`
     )
       .then((res) => res.json())
-      .then((data) => setStreetName(data.address.road || 'Stradă necunoscută'))
+      .then((data) => {
+        const address = data.address || {};
+        const street = address.road || 'Stradă necunoscută';
+        const number = address.house_number ? ` nr. ${address.house_number}` : '';
+        setStreetName(`${street}${number}`);
+      })
       .catch(() => setStreetName('Stradă necunoscută'));
   }, [location]);
 
@@ -66,11 +73,13 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
         'lastReportConfig',
         JSON.stringify({ ratings, tags })
       );
-      onSubmitSuccess?.(true, newReport);
+      onSubmitSuccess?.(newReport);
+      setToast(<FloatingMessage message="TRIMIS" type="success" onClose={() => setToast(null)} />);
       onClose();
     } else {
-      alert('A apărut o eroare.');
-      onSubmitSuccess?.(false);
+      const errMessage = "EROARE SERVER"
+      console.error('Insert error', errMessage);
+      setToast(<FloatingMessage message={`RESPINS – ${errMessage}`} type="error" onClose={() => setToast(null)} />);
     }
 
     setSubmitting(false);
@@ -91,48 +100,53 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   };
 
   return (
-    <div className="sidewalk-panel">
-      <h2>Acordă o notă trotuarului</h2>
-      <p>
-        <strong>Strada:</strong> {streetName}
-      </p>
+    <div className="sidewalk-modal">
+      <h2>Acordă o notă trotuarului:</h2>
+      <div style={{ fontSize: 18 }}>
+        <strong>Strada: {streetName}</strong>
+      </div>
 
-      <div className="ratings-container">
-        {criteria.map(([key, label]) => (
-          <div key={key} className="star-rating-line">
-            <label className="rating-label">{label}</label>
-            <div className="star-rating">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  onClick={() =>
-                    setRatings((prev) => ({
-                      ...prev,
-                      [key]: star,
-                    }))
-                  }
-                  className={`star ${ratings[key] >= star ? 'filled' : ''}`}
-                >
-                  ★
-                </span>
-              ))}
+      <div className="scrollable-container">
+        <div className="ratings-container">
+          {criteria.map(([key, label]) => (
+            <div key={key} className="star-rating-line">
+              <label className="rating-label">{label}</label>
+              <div className="star-rating-wrapper">
+                <div className="star-rating">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      onClick={() =>
+                        setRatings((prev) => ({
+                          ...prev,
+                          [key]: star,
+                        }))
+                      }
+                      className={`star ${ratings[key] >= star ? 'filled' : ''}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <legend>Probleme/Nereguli</legend>
+        <div className="tags-column">
+          {tagKeys.map((tagKey) => (
+            <button
+              key={tagKey}
+              className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
+              onClick={() => toggleTag(tagKey)}
+            >
+              {TAG_LABELS[tagKey]}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <legend>Probleme/Nereguli</legend>
-      <div className="tags-column">
-        {tagKeys.map((tagKey) => (
-          <button
-            key={tagKey}
-            className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
-            onClick={() => toggleTag(tagKey)}
-          >
-            {TAG_LABELS[tagKey]}
-          </button>
-        ))}
-      </div>
 
       <div className="form-buttons">
         <button disabled={!firstRated || submitting} onClick={handleSubmit}>
