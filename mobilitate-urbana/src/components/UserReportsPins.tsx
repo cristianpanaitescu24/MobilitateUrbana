@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { Marker, Popup } from '@vis.gl/react-maplibre';
 import { Report } from '../components/IReport';
 import '../components/UserReportsPins.css';
@@ -6,6 +5,9 @@ import '../components/UserReportsPins.css';
 interface Props {
   reports: Report[];
   loading: boolean;
+  onDeleteReport: (id: string) => void;
+  selectedReport: Report | null;
+  setSelectedReport: (r: Report | null) => void;
 }
 
 const getColorForSatisfaction = (satisfaction?: number): string => {
@@ -16,7 +18,7 @@ const getColorForSatisfaction = (satisfaction?: number): string => {
 };
 
 const renderRatingRow = (label: string, value?: number) => (
-  <div className="report-rating-row">
+  <div className="report-rating-row" key={label}>
     <span><strong>{label}</strong></span>
     <div className="star-rating">
       {[1, 2, 3, 4, 5].map((i) => (
@@ -26,24 +28,20 @@ const renderRatingRow = (label: string, value?: number) => (
   </div>
 );
 
-const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, selectedReport, setSelectedReport}) => {
 
   if (loading) return null;
-
   return (
     <>
       {reports.map((report) => {
-        if (report.location == null ) return null;
-
+        if (!report.location) return null;
         const isSelected = selectedReport?.id === report.id;
         const color = getColorForSatisfaction(report.ratings.satisfaction);
-
         return (
           <Marker
-            key={report.id}
-            longitude={report.location[1]}
-            latitude={report.location[0]}
+            key={report.id ?? `marker-${report.location[0]}-${report.location[1]}`}
+            longitude={report.location[0]}
+            latitude={report.location[1]}
             anchor="center"
             onClick={(e: maplibregl.MapLayerMouseEvent) => {
               e.originalEvent.stopPropagation();
@@ -59,25 +57,24 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
         );
       })}
 
-      {selectedReport && selectedReport.location != null && (
+      {selectedReport && selectedReport.location && (
         <Popup
-          longitude={selectedReport.location[1]}
-          latitude={selectedReport.location[0]}
+          longitude={selectedReport.location[0]}
+          latitude={selectedReport.location[1]}
           onClose={() => setSelectedReport(null)}
           closeButton
         >
           <div style={{ maxWidth: 260 }}>
             <h4 className="font-semibold mb-1">📍 Detalii raport</h4>
             <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
-
-            <>
-            {renderRatingRow("Satisfacție:", selectedReport.ratings.satisfaction)}
-            {renderRatingRow("Siguranță:", selectedReport.ratings.safety)}
-            {renderRatingRow("Lățime:", selectedReport.ratings.width)}
-            {renderRatingRow("Utilizabilitate:", selectedReport.ratings.usability)}
-            {renderRatingRow("Accesibilitate:", selectedReport.ratings.accessibility)}
-            {renderRatingRow("Modernizare:", selectedReport.ratings.modernization)}
-            </>
+            {[
+              ["Satisfacție:", selectedReport.ratings.satisfaction],
+              ["Siguranță:", selectedReport.ratings.safety],
+              ["Lățime:", selectedReport.ratings.width],
+              ["Utilizabilitate:", selectedReport.ratings.usability],
+              ["Accesibilitate:", selectedReport.ratings.accessibility],
+              ["Modernizare:", selectedReport.ratings.modernization]
+            ].map(([label, value]) => renderRatingRow(label as string, value as number))}
 
             {Array.isArray(selectedReport.tags) && selectedReport.tags.length > 0 && (
               <div className="mt-1 text-sm text-gray-600">
@@ -85,6 +82,7 @@ const UserReportPins: React.FC<Props> = ({ reports, loading }) => {
               </div>
             )}
           </div>
+          <button className="delete-button" title="Șterge raportul" onClick={() => onDeleteReport(selectedReport.id)}>🗑️ Șterge</button>
         </Popup>
       )}
     </>

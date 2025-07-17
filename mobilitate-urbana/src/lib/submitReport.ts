@@ -10,6 +10,7 @@ export interface SubmitPayload {
 
 export async function submitReport(payload: SubmitPayload): Promise<Report | null> {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
+
   if (userError || !user) {
     alert('Eroare: Utilizatorul nu este autentificat.');
     return null;
@@ -19,22 +20,21 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
 
   const { error } = await supabase.from('reports').insert({
     user_id: user.id,
-    lat: location[1],
-    lon: location[0],
+    lat: location[0],
+    lon: location[1],
     ratings,
     tags,
     timestamp
   });
 
-  if (error) {
-    console.error('Insert error', error);
-    alert('Eroare la trimiterea raportului.');
+  if(error)
+  {
+    console.log("submitReport error: ", error);
     return null;
   }
 
-  alert('Raport trimis cu succes!');
   const report: Report = {
-    id: "null",
+    id: '',
     user_id: user.id,
     timestamp: timestamp,
     location: location,

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Map, Marker, MapMouseEvent } from '@vis.gl/react-maplibre';
+import { Map, Marker, MapMouseEvent, useMap } from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
+import { deleteReport } from '../lib/deleteReport';
 
 import UserReportPins from './UserReportsPins';
 import YouAreHere from './you-are-here';
@@ -16,6 +17,7 @@ const MapView = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [clickLocation, setClickLocation] = useState<[number, number] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   // Once initialReports are loaded, set them locally
   useEffect(() => {
@@ -26,13 +28,37 @@ const MapView = () => {
 
   // Add new report to state
   const addReport = (newReport: Report) => {
-    setReports((prev) => [...prev, newReport]);
+    const newId = `temp-${Date.now()}-${Math.random()}`;
+    setReports((prev) => [...prev, { ...newReport, id: newId }]);
+  };
+
+  const { current: map } = useMap();
+
+const handleDeleteReport = async (id: string) => {
+    const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
+    if (!confirmed) return;
+
+    const success = await deleteReport(id);
+    if (success) {
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      setSelectedReport(null);
+    } else {
+      alert('A apărut o eroare la ștergere.');
+    }
   };
 
   // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
     setClickLocation([e.lngLat.lng, e.lngLat.lat]);
     setModalOpen(true);
+    
+    if(map) {
+      map.flyTo({
+        center: [e.lngLat.lng, e.lngLat.lat],
+        zoom: 17
+      });
+    }
+      
   };
 
   return (
@@ -47,7 +73,13 @@ const MapView = () => {
         onClick={handleMapClick}
       >
         <YouAreHere />
-        <UserReportPins reports={reports} loading={loading} />
+        <UserReportPins
+          reports={reports}
+          loading={loading}
+          onDeleteReport={handleDeleteReport}
+          selectedReport={selectedReport}
+          setSelectedReport={setSelectedReport}
+        />
 
         {clickLocation && modalOpen && (
           <Marker
@@ -61,15 +93,15 @@ const MapView = () => {
       </Map>
 
       {modalOpen && clickLocation && (
-        <SidewalkFormModal
-          location={clickLocation}
-          onClose={() => setModalOpen(false)}
-          onSubmitSuccess={(success, newReport) => {
-            if (success && newReport) {
-              addReport(newReport);
-            }
-          }}
-        />
+          <SidewalkFormModal
+            location={clickLocation}
+            onClose={() => setModalOpen(false)}
+            onSubmitSuccess={(newReport) => {
+              if (newReport) {
+                addReport(newReport);
+              }
+            }}
+          />
       )}
 
     </>
