@@ -24,7 +24,8 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [tags, setTags] = useState<string[]>([]);
   const firstRated = ratings[criteria[0][0]] != null;
-  const [toast, setToast] = useState<JSX.Element | null>(null);
+  const [toastMessage, setToastMessage] = useState<JSX.Element | null>(null);
+  const [formVisible, setFormVisible] = useState(true);
 
   useEffect(() => {
     fetch(
@@ -69,17 +70,29 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
     const newReport = await submitReport(payload);
 
     if (newReport) {
-      localStorage.setItem(
-        'lastReportConfig',
-        JSON.stringify({ ratings, tags })
+      localStorage.setItem('lastReportConfig', JSON.stringify({ ratings, tags }));
+      setToastMessage(
+        <FloatingMessage
+          message="Trimis cu succes!"
+          type="success"
+          onClose={() => setToastMessage(null)}
+        />
       );
+
+      setFormVisible(false);
       onSubmitSuccess?.(newReport);
-      setToast(<FloatingMessage message="TRIMIS" type="success" onClose={() => setToast(null)} />);
-      onClose();
+
+      setTimeout(() => {
+        onClose();
+      }, 2000);
     } else {
-      const errMessage = "EROARE SERVER"
-      console.error('Insert error', errMessage);
-      setToast(<FloatingMessage message={`RESPINS – ${errMessage}`} type="error" onClose={() => setToast(null)} />);
+      setToastMessage(
+        <FloatingMessage
+          message="RESPINS – EROARE SERVER"
+          type="error"
+          onClose={() => setToastMessage(null)}
+        />
+      );
     }
 
     setSubmitting(false);
@@ -100,65 +113,70 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   };
 
   return (
-    <div className="sidewalk-modal">
-      <h2>Acordă o notă trotuarului:</h2>
-      <div style={{ fontSize: 18 }}>
-        <strong>Strada: {streetName}</strong>
-      </div>
+    <>
+      {toastMessage}
 
-      <div className="scrollable-container">
-        <div className="ratings-container">
-          {criteria.map(([key, label]) => (
-            <div key={key} className="star-rating-line">
-              <label className="rating-label">{label}</label>
-              <div className="star-rating-wrapper">
-                <div className="star-rating">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      onClick={() =>
-                        setRatings((prev) => ({
-                          ...prev,
-                          [key]: star,
-                        }))
-                      }
-                      className={`star ${ratings[key] >= star ? 'filled' : ''}`}
-                    >
-                      ★
-                    </span>
-                  ))}
+      {formVisible && (
+        <div className="sidewalk-modal">
+          <h2>Acordă o notă trotuarului:</h2>
+          <div style={{ fontSize: 18 }}>
+            <strong>Strada: {streetName}</strong>
+        </div>
+
+        <div className="scrollable-container">
+          <div className="ratings-container">
+            {criteria.map(([key, label]) => (
+              <div key={key} className="star-rating-line">
+                <label className="rating-label">{label}</label>
+                <div className="star-rating-wrapper">
+                  <div className="star-rating">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        onClick={() =>
+                          setRatings((prev) => ({
+                            ...prev,
+                            [key]: star,
+                          }))
+                        }
+                        className={`star ${ratings[key] >= star ? 'filled' : ''}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          <legend>Probleme/Nereguli</legend>
+          <div className="tags-column">
+            {tagKeys.map((tagKey) => (
+              <button
+                key={tagKey}
+                className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
+                onClick={() => toggleTag(tagKey)}
+              >
+                {TAG_LABELS[tagKey]}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <legend>Probleme/Nereguli</legend>
-        <div className="tags-column">
-          {tagKeys.map((tagKey) => (
-            <button
-              key={tagKey}
-              className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
-              onClick={() => toggleTag(tagKey)}
-            >
-              {TAG_LABELS[tagKey]}
-            </button>
-          ))}
+        <div className="form-buttons">
+          <button disabled={!firstRated || submitting} onClick={handleSubmit}>
+            {submitting ? 'Se trimite...' : 'Trimite'}
+          </button>
+          <button onClick={handleLastConfig}>Ultimul rating</button>
+          <button onClick={handleReset}>Resetează</button>
+          <button className="cancel-btn" onClick={onClose}>
+            Renunță
+          </button>
         </div>
       </div>
-
-
-      <div className="form-buttons">
-        <button disabled={!firstRated || submitting} onClick={handleSubmit}>
-          {submitting ? 'Se trimite...' : 'Trimite'}
-        </button>
-        <button onClick={handleLastConfig}>Ultimul rating</button>
-        <button onClick={handleReset}>Resetează</button>
-        <button className="cancel-btn" onClick={onClose}>
-          Renunță
-        </button>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

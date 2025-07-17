@@ -7,13 +7,12 @@ function App() {
   return (
     <>
       <AuthProvider>
-      <TopBar/>
-      <MapProvider>
-        <MapView />
-      </MapProvider>
-    </AuthProvider>
+        <TopBar/>
+        <MapProvider>
+          <MapView />
+        </MapProvider>
+      </AuthProvider>
     </>
-    
   );
 }
 

@@ -1,6 +1,5 @@
 import { supabase } from './supabaseClient';
 import { Report } from '../components/IReport'
-import { PostgrestError } from '@supabase/supabase-js';
 
 export interface SubmitPayload {
   location: [number, number];
@@ -8,9 +7,6 @@ export interface SubmitPayload {
   tags: string[];
   timestamp: string;
 }
-
-var internalId = 0;
-
 
 export async function submitReport(payload: SubmitPayload): Promise<Report | null> {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -24,8 +20,8 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
 
   const { error } = await supabase.from('reports').insert({
     user_id: user.id,
-    lat: location[1],
-    lon: location[0],
+    lat: location[0],
+    lon: location[1],
     ratings,
     tags,
     timestamp
@@ -37,10 +33,8 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
     return null;
   }
 
-  internalId = internalId + 1;
-
   const report: Report = {
-    id: 'local_id_' + internalId,
+    id: '',
     user_id: user.id,
     timestamp: timestamp,
     location: location,

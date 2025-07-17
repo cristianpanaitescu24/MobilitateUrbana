@@ -1,23 +1,30 @@
+/* FloatingMessage.css */
 .floating-message {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  z-index: 9999;
   padding: 16px 24px;
   border-radius: 8px;
-  color: white;
   font-weight: bold;
-  font-size: 1.1rem;
-  z-index: 2000;
-  opacity: 0.95;
-  transition: opacity 2.5s ease;
-  pointer-events: none;
+  color: white;
+  background-color: #4caf50; /* green for success */
+  animation: fadeInOut 2s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.floating-message.success {
-  background-color: #4caf50; /* green */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  10% { opacity: 1; transform: translate(-50%, -50%); }
+  90% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
 }
 
 .floating-message.error {
-  background-color: #f44336; /* red */
+  background-color: #c1313f;
+}
+
+.floating-message.success {
+  background-color: #4caf50;
 }

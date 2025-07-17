@@ -28,7 +28,8 @@ const MapView = () => {
 
   // Add new report to state
   const addReport = (newReport: Report) => {
-    setReports((prev) => [...prev, newReport]);
+    const newId = `temp-${Date.now()}-${Math.random()}`;
+    setReports((prev) => [...prev, { ...newReport, id: newId }]);
   };
 
   const { current: map } = useMap();
@@ -52,14 +53,12 @@ const handleDeleteReport = async (id: string) => {
     setModalOpen(true);
     
     if(map) {
-      console.log("FLY");
       map.flyTo({
         center: [e.lngLat.lng, e.lngLat.lat],
         zoom: 17
       });
     }
       
-    else console.log("NOT FLY");
   };
 
   return (

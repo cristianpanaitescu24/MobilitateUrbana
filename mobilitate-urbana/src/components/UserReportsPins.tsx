@@ -31,20 +31,17 @@ const renderRatingRow = (label: string, value?: number) => (
 const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, selectedReport, setSelectedReport}) => {
 
   if (loading) return null;
-  console.log(reports);
   return (
     <>
       {reports.map((report, index) => {
         if (!report.location) return null;
-
         const isSelected = selectedReport?.id === report.id;
         const color = getColorForSatisfaction(report.ratings.satisfaction);
-
         return (
           <Marker
-            key={report.id ?? `marker-${index}`} // <- fallback to index if no ID
-            longitude={report.location[1]}
-            latitude={report.location[0]}
+            key={report.id ?? `marker-${report.location[0]}-${report.location[1]}`}
+            longitude={report.location[0]}
+            latitude={report.location[1]}
             anchor="center"
             onClick={(e: maplibregl.MapLayerMouseEvent) => {
               e.originalEvent.stopPropagation();
@@ -62,15 +59,14 @@ const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, sel
 
       {selectedReport && selectedReport.location && (
         <Popup
-          longitude={selectedReport.location[1]}
-          latitude={selectedReport.location[0]}
+          longitude={selectedReport.location[0]}
+          latitude={selectedReport.location[1]}
           onClose={() => setSelectedReport(null)}
           closeButton
         >
           <div style={{ maxWidth: 260 }}>
             <h4 className="font-semibold mb-1">📍 Detalii raport</h4>
             <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
-
             {[
               ["Satisfacție:", selectedReport.ratings.satisfaction],
               ["Siguranță:", selectedReport.ratings.safety],

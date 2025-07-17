@@ -13,8 +13,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
   return (
     <>
       <Marker
-        longitude={report.location[1]}
-        latitude={report.location[0]}
+        longitude={report.location[0]}
+        latitude={report.location[1]}
         anchor="bottom"
         onMouseEnter={() => setShowPopup(true)}
         onMouseLeave={() => setShowPopup(false)}
@@ -24,8 +24,8 @@ const ReportPin: React.FC<ReportPinProps> = ({ report }) => {
 
       {showPopup && (
         <Popup
-          longitude={report.location[1]}
-          latitude={report.location[0]}
+          longitude={report.location[0]}
+          latitude={report.location[1]}
           closeButton={false}
           closeOnClick={false}
           anchor="top"
