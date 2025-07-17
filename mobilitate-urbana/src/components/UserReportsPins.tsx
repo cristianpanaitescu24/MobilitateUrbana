@@ -33,7 +33,7 @@ const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, sel
   if (loading) return null;
   return (
     <>
-      {reports.map((report, index) => {
+      {reports.map((report) => {
         if (!report.location) return null;
         const isSelected = selectedReport?.id === report.id;
         const color = getColorForSatisfaction(report.ratings.satisfaction);
