@@ -28,17 +28,17 @@ const MapView = () => {
 
   // Add new report to state
   const addReport = (newReport: Report) => {
-    const newId = `temp-${Date.now()}-${Math.random()}`;
-    setReports((prev) => [...prev, { ...newReport, id: newId }]);
+    setReports((prev) => [...prev, { ...newReport }]);
   };
 
   const { current: map } = useMap();
 
-const handleDeleteReport = async (id: string) => {
+  const handleDeleteReport = async (id: string) => {
     const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
     if (!confirmed) return;
 
     const success = await deleteReport(id);
+    console.log(id);
     if (success) {
       setReports((prev) => prev.filter((r) => r.id !== id));
       setSelectedReport(null);
@@ -46,6 +46,12 @@ const handleDeleteReport = async (id: string) => {
       alert('A apărut o eroare la ștergere.');
     }
   };
+
+    const updateReport = (updated: Report) => {
+      setReports((prev) =>
+        prev.map((r) => (r.id === updated.id ? updated : r))
+      );
+    };
 
   // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
@@ -79,6 +85,7 @@ const handleDeleteReport = async (id: string) => {
           onDeleteReport={handleDeleteReport}
           selectedReport={selectedReport}
           setSelectedReport={setSelectedReport}
+          updateReport={updateReport}
         />
 
         {clickLocation && modalOpen && (
@@ -93,15 +100,16 @@ const handleDeleteReport = async (id: string) => {
       </Map>
 
       {modalOpen && clickLocation && (
-          <SidewalkFormModal
-            location={clickLocation}
-            onClose={() => setModalOpen(false)}
-            onSubmitSuccess={(newReport) => {
-              if (newReport) {
-                addReport(newReport);
-              }
-            }}
-          />
+        <SidewalkFormModal
+          location={clickLocation}
+          onClose={() => setModalOpen(false)}
+          onDelete={() => setModalOpen(false)}
+          onSubmitSuccess={(newReport) => {
+            if (newReport) {
+              addReport(newReport);
+            }
+          }}
+        />
       )}
 
     </>

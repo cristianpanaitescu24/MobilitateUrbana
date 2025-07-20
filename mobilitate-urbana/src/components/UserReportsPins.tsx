@@ -1,6 +1,7 @@
-import { Marker, Popup } from '@vis.gl/react-maplibre';
+import { Marker } from '@vis.gl/react-maplibre';
 import { Report } from '../components/IReport';
 import '../components/UserReportsPins.css';
+import SidewalkFormModal from './SidewalkFormModal';
 
 interface Props {
   reports: Report[];
@@ -8,6 +9,7 @@ interface Props {
   onDeleteReport: (id: string) => void;
   selectedReport: Report | null;
   setSelectedReport: (r: Report | null) => void;
+  updateReport: (updated: Report) => void; // new prop
 }
 
 const getColorForSatisfaction = (satisfaction?: number): string => {
@@ -17,26 +19,23 @@ const getColorForSatisfaction = (satisfaction?: number): string => {
   return `hsl(${hue}, 80%, 50%)`;
 };
 
-const renderRatingRow = (label: string, value?: number) => (
-  <div className="report-rating-row" key={label}>
-    <span><strong>{label}</strong></span>
-    <div className="star-rating">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i}>{i <= (value ?? 0) ? "★" : "☆"}</span>
-      ))}
-    </div>
-  </div>
-);
-
-const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, selectedReport, setSelectedReport}) => {
-
+const UserReportPins: React.FC<Props> = ({
+  reports,
+  loading,
+  onDeleteReport,
+  selectedReport,
+  setSelectedReport,
+  updateReport
+}) => {
   if (loading) return null;
+
   return (
     <>
       {reports.map((report) => {
         if (!report.location) return null;
         const isSelected = selectedReport?.id === report.id;
         const color = getColorForSatisfaction(report.ratings.satisfaction);
+
         return (
           <Marker
             key={report.id ?? `marker-${report.location[0]}-${report.location[1]}`}
@@ -58,32 +57,33 @@ const UserReportPins: React.FC<Props> = ({ reports, loading, onDeleteReport, sel
       })}
 
       {selectedReport && selectedReport.location && (
-        <Popup
-          longitude={selectedReport.location[0]}
-          latitude={selectedReport.location[1]}
-          onClose={() => setSelectedReport(null)}
-          closeButton
+        <div
+          className="floating-sidewalk-form"
+          style={{
+            position: 'absolute',
+            top: 50,
+            left: 0,
+            right: 0,
+            margin: 'auto',
+            zIndex: 1000,
+            maxWidth: 400
+          }}
         >
-          <div style={{ maxWidth: 260 }}>
-            <h4 className="font-semibold mb-1">📍 Detalii raport</h4>
-            <p><strong>Data:</strong> {new Date(selectedReport.timestamp || "").toLocaleString()}</p>
-            {[
-              ["Satisfacție:", selectedReport.ratings.satisfaction],
-              ["Siguranță:", selectedReport.ratings.safety],
-              ["Lățime:", selectedReport.ratings.width],
-              ["Utilizabilitate:", selectedReport.ratings.usability],
-              ["Accesibilitate:", selectedReport.ratings.accessibility],
-              ["Modernizare:", selectedReport.ratings.modernization]
-            ].map(([label, value]) => renderRatingRow(label as string, value as number))}
-
-            {Array.isArray(selectedReport.tags) && selectedReport.tags.length > 0 && (
-              <div className="mt-1 text-sm text-gray-600">
-                <p><strong>Probleme:</strong> {selectedReport.tags.join(', ')}</p>
-              </div>
-            )}
-          </div>
-          <button className="delete-button" title="Șterge raportul" onClick={() => onDeleteReport(selectedReport.id)}>🗑️ Șterge</button>
-        </Popup>
+          <SidewalkFormModal
+            location={[selectedReport.location[0], selectedReport.location[1]]}
+            existingReport={selectedReport}
+            isEditMode={true}
+            onClose={() => setSelectedReport(null)}
+            onSubmitSuccess={(updatedReport) => {
+              if (updatedReport) updateReport(updatedReport);
+              setSelectedReport(null);
+            }}
+            onDelete={() => {
+              onDeleteReport(selectedReport.id);
+              setSelectedReport(null);
+            }}
+          />
+        </div>
       )}
     </>
   );
