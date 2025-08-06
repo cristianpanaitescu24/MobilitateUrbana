@@ -31,8 +31,6 @@ const MapView = () => {
     setReports((prev) => [...prev, { ...newReport }]);
   };
 
-  const { current: map } = useMap();
-
   const handleDeleteReport = async (id: string) => {
     const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
     if (!confirmed) return;

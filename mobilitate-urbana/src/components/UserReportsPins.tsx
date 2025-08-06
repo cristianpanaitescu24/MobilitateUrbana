@@ -1,15 +1,12 @@
 import { Marker } from '@vis.gl/react-maplibre';
 import { Report } from '../components/IReport';
 import '../components/UserReportsPins.css';
-import SidewalkFormModal from './SidewalkFormModal';
 
 interface Props {
   reports: Report[];
   loading: boolean;
-  onDeleteReport: (id: string) => void;
   selectedReport: Report | null;
   setSelectedReport: (r: Report | null) => void;
-  updateReport: (updated: Report) => void; // new prop
 }
 
 const getColorForSatisfaction = (satisfaction?: number): string => {
@@ -22,10 +19,8 @@ const getColorForSatisfaction = (satisfaction?: number): string => {
 const UserReportPins: React.FC<Props> = ({
   reports,
   loading,
-  onDeleteReport,
   selectedReport,
   setSelectedReport,
-  updateReport
 }) => {
   if (loading) return null;
 
@@ -55,36 +50,6 @@ const UserReportPins: React.FC<Props> = ({
           </Marker>
         );
       })}
-
-      {/* {selectedReport && selectedReport.location && (
-        <div
-          className="floating-sidewalk-form"
-          style={{
-            position: 'absolute',
-            top: 50,
-            left: 0,
-            right: 0,
-            margin: 'auto',
-            zIndex: 1000,
-            maxWidth: 400
-          }}
-        >
-          <SidewalkFormModal
-            location={[selectedReport.location[0], selectedReport.location[1]]}
-            existingReport={selectedReport}
-            isEditMode={true}
-            onClose={() => setSelectedReport(null)}
-            onSubmitSuccess={(updatedReport) => {
-              if (updatedReport) updateReport(updatedReport);
-              setSelectedReport(null);
-            }}
-            onDelete={() => {
-              onDeleteReport(selectedReport.id);
-              setSelectedReport(null);
-            }}
-          />
-        </div>
-      )} */}
     </>
   );
 };
