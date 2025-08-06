@@ -100,7 +100,7 @@ const MapView = () => {
             setSelectedReport(null);
           }}
           onDelete={() => {
-            deleteReport(selectedReport.id);
+            handleDeleteReport(selectedReport.id);
             setSelectedReport(null);
           }}
         />
