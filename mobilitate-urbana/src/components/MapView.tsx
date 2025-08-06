@@ -28,17 +28,17 @@ const MapView = () => {
 
   // Add new report to state
   const addReport = (newReport: Report) => {
-    const newId = `temp-${Date.now()}-${Math.random()}`;
-    setReports((prev) => [...prev, { ...newReport, id: newId }]);
+    setReports((prev) => [...prev, { ...newReport }]);
   };
 
   const { current: map } = useMap();
 
-const handleDeleteReport = async (id: string) => {
+  const handleDeleteReport = async (id: string) => {
     const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
     if (!confirmed) return;
 
     const success = await deleteReport(id);
+    console.log(id);
     if (success) {
       setReports((prev) => prev.filter((r) => r.id !== id));
       setSelectedReport(null);
@@ -47,17 +47,17 @@ const handleDeleteReport = async (id: string) => {
     }
   };
 
+    const updateReport = (updated: Report) => {
+      setReports((prev) =>
+        prev.map((r) => (r.id === updated.id ? updated : r))
+      );
+    };
+
   // Map click: open modal
   const handleMapClick = (e: MapMouseEvent) => {
     setClickLocation([e.lngLat.lng, e.lngLat.lat]);
     setModalOpen(true);
-    
-    if(map) {
-      map.flyTo({
-        center: [e.lngLat.lng, e.lngLat.lat],
-        zoom: 17
-      });
-    }
+    setSelectedReport(null);
       
   };
 
@@ -79,6 +79,7 @@ const handleDeleteReport = async (id: string) => {
           onDeleteReport={handleDeleteReport}
           selectedReport={selectedReport}
           setSelectedReport={setSelectedReport}
+          updateReport={updateReport}
         />
 
         {clickLocation && modalOpen && (
@@ -92,16 +93,34 @@ const handleDeleteReport = async (id: string) => {
         {/* <FABToolbar/> */}
       </Map>
 
-      {modalOpen && clickLocation && (
-          <SidewalkFormModal
-            location={clickLocation}
-            onClose={() => setModalOpen(false)}
-            onSubmitSuccess={(newReport) => {
-              if (newReport) {
-                addReport(newReport);
-              }
-            }}
-          />
+      {selectedReport && selectedReport.location && (
+        <SidewalkFormModal
+          location={[selectedReport.location[0], selectedReport.location[1]]}
+          existingReport={selectedReport}
+          isEditMode={true}
+          onClose={() => setSelectedReport(null)}
+          onSubmitSuccess={(updatedReport) => {
+            if (updatedReport) updateReport(updatedReport);
+            setSelectedReport(null);
+          }}
+          onDelete={() => {
+            deleteReport(selectedReport.id);
+            setSelectedReport(null);
+          }}
+        />
+      )}
+
+      {!selectedReport && modalOpen && clickLocation && (
+        <SidewalkFormModal
+          location={clickLocation}
+          onClose={() => setModalOpen(false)}
+          onDelete={() => setModalOpen(false)}
+          onSubmitSuccess={(newReport) => {
+            if (newReport) {
+              addReport(newReport);
+            }
+          }}
+        />
       )}
 
     </>

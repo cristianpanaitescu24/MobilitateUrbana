@@ -1,19 +1,15 @@
 // Keys are stored in the DB (tags), values are shown in the UI
 
 export const TAG_LABELS: Record<string, string> = {
-  cars: "Mașini parcate",
-  signs: "Semne lipsă",
-  blocked: "Trotuar blocat",
-  surface: "Alunecos",
+  unavailable: "Trotuar inexistent/blocat",
+  cars: "Mașini parcate ilegal",
+  signs: "Lipsa marcaje/semne circulație",
+  surface: "Gropi sau denivelări",
   overgrown: "Vegetatie crescută",
-  // add more as needed
+  accesibility: "Inaccesibil carucioare/scaune",
+  requiresRenovation: "Necesita renovare"
 };
 
 export const CRITERIA_LABELS: Record<string, string> = {
   satisfaction: "Satisfacție generală",
-  safety: "Siguranță",
-  width: "Lățime",
-  usability: "Utilizabilitate",
-  accessibility: "Accesibilitate",
-  modernization: "Nivel de modernizare",
 };

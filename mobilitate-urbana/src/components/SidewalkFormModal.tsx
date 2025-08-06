@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './SidewalkFormModal.css';
-import { submitReport } from '../lib/submitReport';
+import { submitReport, updateReport } from '../lib/submitReport';
 import { TAG_LABELS, CRITERIA_LABELS } from '../constants/formLabels';
 import { Report } from '../components/IReport';
 import FloatingMessage from './FloatingMessage';
+import { getStreetNameFromCoords } from '../lib/getStreetNameFromCoords';
 
 const criteria = Object.entries(CRITERIA_LABELS);
 const tagKeys = Object.keys(TAG_LABELS);
@@ -11,13 +12,19 @@ const tagKeys = Object.keys(TAG_LABELS);
 interface SidewalkFormModalProps {
   location: [number, number];
   onClose: () => void;
+  onDelete: () => void;
   onSubmitSuccess?: (report?: Report | null) => void;
+  existingReport?: Report;
+  isEditMode?: boolean;
 }
 
 const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   location,
   onClose,
   onSubmitSuccess,
+  existingReport,
+  isEditMode,
+  onDelete,
 }) => {
   const [submitting, setSubmitting] = useState(false);
   const [streetName, setStreetName] = useState('Se încarcă...');
@@ -28,27 +35,32 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
   const [formVisible, setFormVisible] = useState(true);
 
   useEffect(() => {
-    fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location[1]}&lon=${location[0]}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const address = data.address || {};
-        const street = address.road || 'Stradă necunoscută';
-        const number = address.house_number ? ` nr. ${address.house_number}` : '';
-        setStreetName(`${street}${number}`);
-      })
-      .catch(() => setStreetName('Stradă necunoscută'));
+    getStreetNameFromCoords(location).then(setStreetName);
   }, [location]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('lastReportConfig');
-    if (stored) {
-      const { ratings, tags } = JSON.parse(stored);
-      setRatings(ratings);
-      setTags(tags);
+    if (existingReport) {
+      setRatings(existingReport.ratings || {});
+      setTags(existingReport.tags || []);
     }
-  }, []);
+  }, [existingReport]);
+
+  useEffect(() => {
+    if (existingReport?.location) {
+      getStreetNameFromCoords(existingReport.location).then(setStreetName);
+    }
+  }, [existingReport?.location]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const stored = localStorage.getItem('lastReportConfig');
+      if (stored) {
+        const { ratings, tags } = JSON.parse(stored);
+        setRatings(ratings);
+        setTags(tags);
+      }
+    }
+  }, [isEditMode]);
 
   const toggleTag = (tag: string) => {
     setTags((prev) =>
@@ -67,28 +79,35 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
       timestamp: new Date().toISOString(),
     };
 
-    const newReport = await submitReport(payload);
+    let result: Report | null = null;
 
-    if (newReport) {
+    if (isEditMode && existingReport?.id) {
+      result = await updateReport(existingReport.id, payload);
+    } else {
+      result = await submitReport(payload);
+    }
+    
+
+    if (result) {
       localStorage.setItem('lastReportConfig', JSON.stringify({ ratings, tags }));
       setToastMessage(
         <FloatingMessage
-          message="Trimis cu succes!"
+          message={isEditMode ? 'Actualizat cu succes!' : 'Trimis cu succes!'}
           type="success"
           onClose={() => setToastMessage(null)}
         />
       );
 
       setFormVisible(false);
-      onSubmitSuccess?.(newReport);
-
+      onSubmitSuccess?.(result);
       setTimeout(() => {
         onClose();
       }, 2000);
+
     } else {
       setToastMessage(
         <FloatingMessage
-          message="RESPINS – EROARE SERVER"
+          message="Eroare la trimitere"
           type="error"
           onClose={() => setToastMessage(null)}
         />
@@ -118,16 +137,22 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
 
       {formVisible && (
         <div className="sidewalk-modal">
-          <h2>Acordă o notă trotuarului:</h2>
           <div style={{ fontSize: 18 }}>
             <strong>Strada: {streetName}</strong>
-        </div>
+          </div>
 
-        <div className="scrollable-container">
+          <div className="config-icons">
+            <button onClick={handleLastConfig} title="Încarcă ultima configurare">
+              🔄
+            </button>
+            <button onClick={handleReset} title="Resetează">
+              ♻️
+            </button>
+          </div>
+
           <div className="ratings-container">
             {criteria.map(([key, label]) => (
               <div key={key} className="star-rating-line">
-                <label className="rating-label">{label}</label>
                 <div className="star-rating-wrapper">
                   <div className="star-rating">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -150,31 +175,41 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
             ))}
           </div>
 
-          <legend>Probleme/Nereguli</legend>
-          <div className="tags-column">
-            {tagKeys.map((tagKey) => (
-              <button
-                key={tagKey}
-                className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
-                onClick={() => toggleTag(tagKey)}
-              >
-                {TAG_LABELS[tagKey]}
+          <div className="scrollable-container">
+            
+
+            <legend>Probleme/Nereguli</legend>
+            <div className="tags-column">
+              {tagKeys.map((tagKey) => (
+                <button
+                  key={tagKey}
+                  className={`tag-button ${tags.includes(tagKey) ? 'active' : ''}`}
+                  onClick={() => toggleTag(tagKey)}
+                >
+                  {TAG_LABELS[tagKey]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-buttons compact">
+            {isEditMode && (
+              <button className="delete-btn" onClick={() => onDelete?.()}>
+                🗑️
               </button>
-            ))}
+            )}
+            <button className="cancel-btn" onClick={onClose}>
+              Renunță
+            </button>
+            <button
+              disabled={!firstRated || submitting}
+              onClick={handleSubmit}
+              className="submit-btn"
+            >
+              {submitting ? 'Se trimite...' : isEditMode ? 'Actualizează' : 'Trimite'}
+            </button>
           </div>
         </div>
-
-        <div className="form-buttons">
-          <button disabled={!firstRated || submitting} onClick={handleSubmit}>
-            {submitting ? 'Se trimite...' : 'Trimite'}
-          </button>
-          <button onClick={handleLastConfig}>Ultimul rating</button>
-          <button onClick={handleReset}>Resetează</button>
-          <button className="cancel-btn" onClick={onClose}>
-            Renunță
-          </button>
-        </div>
-      </div>
       )}
     </>
   );
