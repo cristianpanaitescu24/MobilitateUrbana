@@ -76,7 +76,7 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
       location,
       ratings,
       tags,
-      timestamp: existingReport?.timestamp || new Date().toISOString(),
+      timestamp: new Date().toISOString(),
     };
 
     let result: Report | null = null;
@@ -86,6 +86,7 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
     } else {
       result = await submitReport(payload);
     }
+    
 
     if (result) {
       localStorage.setItem('lastReportConfig', JSON.stringify({ ratings, tags }));
@@ -102,6 +103,7 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
       setTimeout(() => {
         onClose();
       }, 2000);
+
     } else {
       setToastMessage(
         <FloatingMessage

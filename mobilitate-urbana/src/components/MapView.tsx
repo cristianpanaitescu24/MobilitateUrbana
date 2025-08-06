@@ -57,14 +57,7 @@ const MapView = () => {
   const handleMapClick = (e: MapMouseEvent) => {
     setClickLocation([e.lngLat.lng, e.lngLat.lat]);
     setModalOpen(true);
-    
-    if(map) {
-      console.log("test fly");
-      map.flyTo({
-        center: [e.lngLat.lng, e.lngLat.lat],
-        zoom: 17
-      });
-    }
+    setSelectedReport(null);
       
   };
 
@@ -100,7 +93,24 @@ const MapView = () => {
         {/* <FABToolbar/> */}
       </Map>
 
-      {modalOpen && clickLocation && (
+      {selectedReport && selectedReport.location && (
+        <SidewalkFormModal
+          location={[selectedReport.location[0], selectedReport.location[1]]}
+          existingReport={selectedReport}
+          isEditMode={true}
+          onClose={() => setSelectedReport(null)}
+          onSubmitSuccess={(updatedReport) => {
+            if (updatedReport) updateReport(updatedReport);
+            setSelectedReport(null);
+          }}
+          onDelete={() => {
+            deleteReport(selectedReport.id);
+            setSelectedReport(null);
+          }}
+        />
+      )}
+
+      {!selectedReport && modalOpen && clickLocation && (
         <SidewalkFormModal
           location={clickLocation}
           onClose={() => setModalOpen(false)}

@@ -15,11 +15,10 @@
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -60%); }
-  40% { opacity: 1; transform: translate(-50%, -50%); }
-  60% { opacity: 1; transform: translate(-50%, -50%); }
-  100% { opacity: 1; transform: translate(-50%, -50%); }
-  100% { opacity: 0; transform: translate(-50%, -40%); }
+  0% { opacity: 1; transform: translate(-50%, -100%); }
+  33% { opacity: 0.6; }
+  66% { opacity: 0.3;  }
+  100% { opacity: 0; transform: translate(-50%, 300%); }
 }
 
 .floating-message.error {

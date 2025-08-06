@@ -47,7 +47,7 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
     ratings: data.ratings,
     tags: data.tags ?? [],
   };
-
+  console.log("Sumbit Report retuned", report);
   return report;
 }
 
@@ -55,8 +55,15 @@ export async function submitReport(payload: SubmitPayload): Promise<Report | nul
  * Updates an existing report by ID and returns the updated report.
  */
 export async function updateReport(id: string, payload: Partial<SubmitPayload>): Promise<Report | null> {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    alert('Eroare: Utilizatorul nu este autentificat.');
+    return null;
+  }
+
   const updates: any = {};
-  console.log("PULA", id, payload);
+  console.log ("updateReport start payload: ", payload);
   if (payload.location) {
     updates.lat = payload.location[0];
     updates.lon = payload.location[1];
@@ -71,12 +78,19 @@ export async function updateReport(id: string, payload: Partial<SubmitPayload>):
     updates.timestamp = payload.timestamp;
   }
 
+  console.log ("updateReport id:", id);
+
   const { data, error } = await supabase
     .from('reports')
-    .update(updates)
+    .update({
+      ratings: updates.ratings,
+      tags: updates.tags,
+      timestamp: updates.timestamp
+    })
     .eq('id', id)
     .select();
 
+  console.log("received: data: ", data, "error:", error);
   if (error || !data) {
     console.error('updateReport error:', error);
     return null;
@@ -84,12 +98,13 @@ export async function updateReport(id: string, payload: Partial<SubmitPayload>):
 
   const report: Report = {
     id: id,
-    user_id: updates.user_id,
+    user_id: user.id,
     timestamp: updates.timestamp,
     location: [updates.lat, updates.lon],
     ratings: updates.ratings,
     tags: updates.tags ?? [],
   };
 
+  console.log("Update Report retuned", report);
   return report;
 }

@@ -56,7 +56,7 @@ const UserReportPins: React.FC<Props> = ({
         );
       })}
 
-      {selectedReport && selectedReport.location && (
+      {/* {selectedReport && selectedReport.location && (
         <div
           className="floating-sidewalk-form"
           style={{
@@ -84,7 +84,7 @@ const UserReportPins: React.FC<Props> = ({
             }}
           />
         </div>
-      )}
+      )} */}
     </>
   );
 };
