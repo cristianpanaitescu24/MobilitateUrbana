@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Marker, MapMouseEvent, useMap } from '@vis.gl/react-maplibre';
+import { Map, Marker, MapMouseEvent} from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
 import { deleteReport } from '../lib/deleteReport';
@@ -30,8 +30,6 @@ const MapView = () => {
   const addReport = (newReport: Report) => {
     setReports((prev) => [...prev, { ...newReport }]);
   };
-
-  const { current: map } = useMap();
 
   const handleDeleteReport = async (id: string) => {
     const confirmed = window.confirm('Sigur vrei să ștergi acest raport?');
@@ -76,10 +74,8 @@ const MapView = () => {
         <UserReportPins
           reports={reports}
           loading={loading}
-          onDeleteReport={handleDeleteReport}
           selectedReport={selectedReport}
           setSelectedReport={setSelectedReport}
-          updateReport={updateReport}
         />
 
         {clickLocation && modalOpen && (
@@ -104,7 +100,7 @@ const MapView = () => {
             setSelectedReport(null);
           }}
           onDelete={() => {
-            deleteReport(selectedReport.id);
+            handleDeleteReport(selectedReport.id);
             setSelectedReport(null);
           }}
         />

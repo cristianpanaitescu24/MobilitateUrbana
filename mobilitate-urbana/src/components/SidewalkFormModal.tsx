@@ -151,7 +151,7 @@ const SidewalkFormModal: React.FC<SidewalkFormModalProps> = ({
           </div>
 
           <div className="ratings-container">
-            {criteria.map(([key, label]) => (
+            {criteria.map(([key]) => (
               <div key={key} className="star-rating-line">
                 <div className="star-rating-wrapper">
                   <div className="star-rating">
