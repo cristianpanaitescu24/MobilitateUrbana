@@ -59,6 +59,7 @@ const MapView = () => {
     setModalOpen(true);
     
     if(map) {
+      console.log("test fly");
       map.flyTo({
         center: [e.lngLat.lng, e.lngLat.lat],
         zoom: 17
