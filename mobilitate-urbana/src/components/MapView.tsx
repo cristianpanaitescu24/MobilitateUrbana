@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Map, Marker, MapMouseEvent, useMap } from '@vis.gl/react-maplibre';
+import { Map, Marker, MapMouseEvent} from '@vis.gl/react-maplibre';
 import { middleOfBucharest } from '../constants/constants';
 import { useUserReports } from '../hooks/useUserReports';
 import { deleteReport } from '../lib/deleteReport';
@@ -74,10 +74,8 @@ const MapView = () => {
         <UserReportPins
           reports={reports}
           loading={loading}
-          onDeleteReport={handleDeleteReport}
           selectedReport={selectedReport}
           setSelectedReport={setSelectedReport}
-          updateReport={updateReport}
         />
 
         {clickLocation && modalOpen && (
