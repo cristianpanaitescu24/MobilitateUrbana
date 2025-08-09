@@ -18,7 +18,6 @@ const MapView = () => {
   const [clickLocation, setClickLocation] = useState<[number, number] | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-
   // Once initialReports are loaded, set them locally
   useEffect(() => {
     if (!loading && initialReports.length > 0) {
@@ -29,6 +28,11 @@ const MapView = () => {
   // Add new report to state
   const addReport = (newReport: Report) => {
     setReports((prev) => [...prev, { ...newReport }]);
+  };
+
+  const handleSelectReport = (report: Report | null) => {
+    setSelectedReport(report);
+    setClickLocation(null);
   };
 
   const handleDeleteReport = async (id: string) => {
@@ -75,7 +79,7 @@ const MapView = () => {
           reports={reports}
           loading={loading}
           selectedReport={selectedReport}
-          setSelectedReport={setSelectedReport}
+          setSelectedReport={handleSelectReport}
         />
 
         {clickLocation && modalOpen && (

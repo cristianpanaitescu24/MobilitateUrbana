@@ -14,7 +14,7 @@ const FloatingMessage: React.FC<Props> = ({ message, type = 'success', onClose }
     const timer = setTimeout(() => {
       setVisible(false);
       onClose?.();
-    }, 1000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
